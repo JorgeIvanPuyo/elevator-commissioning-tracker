@@ -29,6 +29,8 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - [x] Crear endpoint de listado para TestType.
 - [x] Crear seed de TestType.
 - [x] Crear tests API y servicios.
+- [x] Aislar base de datos de pruebas con `TEST_DATABASE_URL`.
+- [x] Corregir API CI para levantar PostgreSQL en GitHub Actions.
 
 ## Fase 3 — Pruebas y parámetros
 - [ ] Crear TestRun.
@@ -114,4 +116,6 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - El `sort_order` de piso es único por elevador y `label` es único por elevador cuando no es nulo/vacío.
 - Los pisos no servidos permanecen visibles, pero no contarán para KPIs futuros de nivelación obligatoria.
 - El backend sigue corriendo por Docker Compose; el frontend queda documentado para ejecución directa en WSL2.
+- Fix técnico cerrado: pytest usa un engine propio con `TEST_DATABASE_URL`, valida que sea una base de test y no toca la base de desarrollo.
+- GitHub Actions de API levanta PostgreSQL como service container y ejecuta pytest con `APP_ENV=test`.
 - Siguiente slice recomendado: Fase 3, crear `TestRun`, `ParameterDefinition`, `TestRunParameterValue`, seed de parámetros y validación HEX/decimal.

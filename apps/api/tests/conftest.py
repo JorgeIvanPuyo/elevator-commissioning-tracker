@@ -1,30 +1,59 @@
+from collections.abc import AsyncIterator
+
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
+from app.config.settings import settings
 from app.db import models  # noqa: F401
 from app.db.base import Base
-from app.db.session import AsyncSessionLocal, engine
+from app.db.session import get_db_session
 from app.main import app
 from app.services.test_type_seed import seed_test_types
 
 
+_MISSING = object()
+
+
+def require_test_database_url(value: str | None | object = _MISSING) -> str:
+    test_database_url = settings.test_database_url if value is _MISSING else value
+    if not test_database_url:
+        raise RuntimeError("TEST_DATABASE_URL is required to run backend tests safely.")
+    if "test" not in test_database_url.lower():
+        raise RuntimeError("Refusing to reset database because TEST_DATABASE_URL does not look like a test database.")
+    return test_database_url
+
+
+@pytest.fixture(scope="session")
+def test_database_url() -> str:
+    return require_test_database_url()
+
+
 @pytest_asyncio.fixture(autouse=True)
-async def reset_database():
-    async with engine.begin() as connection:
-        await connection.execute(text("DROP TABLE IF EXISTS floor_labels CASCADE"))
+async def test_session_factory(test_database_url: str):
+    test_engine = create_async_engine(test_database_url, pool_pre_ping=True, poolclass=NullPool)
+    TestSessionLocal = async_sessionmaker(test_engine, expire_on_commit=False)
+
+    async with test_engine.begin() as connection:
         await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)
-        await connection.execute(text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL)"))
-        await connection.execute(text("DELETE FROM alembic_version"))
-        await connection.execute(text("INSERT INTO alembic_version (version_num) VALUES ('0002_elevator_floors')"))
 
-    async with AsyncSessionLocal() as session:
+    async with TestSessionLocal() as session:
         await seed_test_types(session)
         await session.commit()
 
-    yield
+    async def override_get_db_session() -> AsyncIterator[AsyncSession]:
+        async with TestSessionLocal() as session:
+            yield session
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+
+    yield TestSessionLocal
+
+    app.dependency_overrides.pop(get_db_session, None)
+    await test_engine.dispose()
 
 
 @pytest_asyncio.fixture
@@ -35,6 +64,6 @@ async def client():
 
 
 @pytest_asyncio.fixture
-async def db_session() -> AsyncSession:
-    async with AsyncSessionLocal() as session:
+async def db_session(test_session_factory) -> AsyncIterator[AsyncSession]:
+    async with test_session_factory() as session:
         yield session

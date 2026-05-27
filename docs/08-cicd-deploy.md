@@ -19,7 +19,7 @@ Cloud Run:
 - Variables:
   - `DATABASE_URL`
   - `GCS_BUCKET_NAME`
-  - `ENVIRONMENT`
+  - `APP_ENV`
   - `CORS_ORIGINS`
 - Healthcheck:
   - `/health`
@@ -34,6 +34,12 @@ Vercel:
 - Usar PostgreSQL connection string.
 - Alembic debe correr contra la base de datos.
 - No usar Supabase Auth en MVP porque no se requiere autenticación.
+
+## Backend Test Database
+- CI debe levantar PostgreSQL como service container.
+- Tests backend deben usar `APP_ENV=test`.
+- `TEST_DATABASE_URL` es obligatorio para pytest.
+- Nunca ejecutar tests contra la base de desarrollo ni contra Supabase.
 
 ## GCS
 - Bucket privado.

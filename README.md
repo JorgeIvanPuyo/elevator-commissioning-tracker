@@ -9,9 +9,10 @@ Monorepo for elevator load testing and fine leveling traceability.
 
 ## Local Development
 
-Backend and database run with Docker Compose:
+Backend and databases run with Docker Compose:
 
 ```bash
+docker-compose up -d postgres postgres_test
 docker-compose up --build api postgres
 ```
 
@@ -34,7 +35,21 @@ Open `http://localhost:3000`.
 
 ```bash
 docker-compose run --rm --build api alembic upgrade head
-docker-compose run --rm --build api pytest
+docker-compose run --rm api pytest
+```
+
+Backend tests always use `TEST_DATABASE_URL` and reset only the test database.
+
+Never run backend tests against the development database or Supabase.
+
+Direct WSL2 test command:
+
+```bash
+cd apps/api
+APP_ENV=test \
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5433/elevator_commissioning_test \
+TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5433/elevator_commissioning_test \
+pytest
 ```
 
 ## Optional Full Docker Stack
