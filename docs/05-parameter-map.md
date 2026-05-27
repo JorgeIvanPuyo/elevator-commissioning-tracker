@@ -6,6 +6,13 @@
 | A61E | Configura 0% de carga |
 | A62E | Configura 100% de carga |
 
+## Auto Process Commands
+| Code | Purpose |
+|---|---|
+| A65E | Ajuste automático de nivelación sin carga |
+| A66E | Ajuste automático de nivelación con 100% de carga |
+| A67E | Ajuste automático de compensación de carga |
+
 ## Auto Leveling Parameters A65E/A66E
 
 | Bound | Zone | Bias | Parameter | Example HEX | Decimal |
@@ -52,3 +59,8 @@
 | 214 | Ajuste manual de nivelación |
 | 022F | Ajuste de histerisis/general según comportamiento observado |
 | 229 | Ajuste manual relacionado con nivelación |
+
+## Storage Rules
+- `hex_value` se guarda en mayúsculas y sin prefijo `0x`.
+- `decimal_value` se calcula en backend.
+- Los pares min/max se validan con `bound_type` y `pair_code` desde `parameter_definitions`.

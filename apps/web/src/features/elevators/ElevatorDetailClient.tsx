@@ -1,36 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api";
-import type { Elevator, ElevatorFloor } from "@/types/api";
+import { fromDatetimeLocalValue } from "@/lib/hex";
+import type { Elevator, ElevatorFloor, TestRun, TestRunStatus, TestType } from "@/types/api";
 
-const futureLinks = ["Pruebas", "Nivelación", "Parámetros", "Evidencias"];
+const statusLabels: Record<TestRunStatus, string> = {
+  draft: "Borrador",
+  in_progress: "En proceso",
+  completed: "Completada",
+  cancelled: "Cancelada",
+};
 
 export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
   const [elevator, setElevator] = useState<Elevator | null>(null);
   const [floors, setFloors] = useState<ElevatorFloor[]>([]);
+  const [testRuns, setTestRuns] = useState<TestRun[]>([]);
+  const [testTypes, setTestTypes] = useState<TestType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSavingTestRun, setIsSavingTestRun] = useState(false);
   const [savingFloorId, setSavingFloorId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadElevator() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [elevatorResponse, floorResponse] = await Promise.all([api.getElevator(elevatorId), api.listElevatorFloors(elevatorId)]);
-        setElevator(elevatorResponse);
-        setFloors(floorResponse);
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "No se pudo cargar el elevador");
-      } finally {
-        setIsLoading(false);
-      }
+  async function loadElevator() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [elevatorResponse, floorResponse, testRunResponse, testTypeResponse] = await Promise.all([
+        api.getElevator(elevatorId),
+        api.listElevatorFloors(elevatorId),
+        api.listElevatorTestRuns(elevatorId),
+        api.listTestTypes(),
+      ]);
+      setElevator(elevatorResponse);
+      setFloors(floorResponse);
+      setTestRuns(testRunResponse);
+      setTestTypes(testTypeResponse);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "No se pudo cargar el elevador");
+    } finally {
+      setIsLoading(false);
     }
+  }
 
+  useEffect(() => {
     void loadElevator();
   }, [elevatorId]);
 
@@ -44,6 +60,32 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
       setError(saveError instanceof Error ? saveError.message : "No se pudo actualizar el piso");
     } finally {
       setSavingFloorId(null);
+    }
+  }
+
+  async function handleCreateTestRun(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSavingTestRun(true);
+    setError(null);
+    const form = new FormData(event.currentTarget);
+
+    try {
+      await api.createTestRun(elevatorId, {
+        test_type_id: String(form.get("test_type_id") || ""),
+        technician_name: String(form.get("technician_name") || ""),
+        status: String(form.get("status") || "draft") as TestRunStatus,
+        started_at: fromDatetimeLocalValue(form.get("started_at")),
+        completed_at: fromDatetimeLocalValue(form.get("completed_at")),
+        title: String(form.get("title") || "") || null,
+        summary: String(form.get("summary") || "") || null,
+        notes: String(form.get("notes") || "") || null,
+      });
+      event.currentTarget.reset();
+      await loadElevator();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "No se pudo crear la prueba");
+    } finally {
+      setIsSavingTestRun(false);
     }
   }
 
@@ -64,13 +106,71 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-4">
-            {futureLinks.map((label) => (
-              <div className="border border-field-line bg-white p-4 shadow-panel" key={label}>
-                <p className="text-sm font-semibold">{label}</p>
-                <p className="mt-2 text-sm text-field-muted">Pendiente</p>
-              </div>
-            ))}
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="border border-field-line bg-white p-4 shadow-panel">
+              <p className="text-sm font-semibold">Pruebas</p>
+              <p className="mt-2 text-sm text-field-muted">{testRuns.length} iteraciones registradas</p>
+            </div>
+            <div className="border border-field-line bg-white p-4 shadow-panel">
+              <p className="text-sm font-semibold">Nivelación</p>
+              <p className="mt-2 text-sm text-field-muted">Pendiente</p>
+            </div>
+            <div className="border border-field-line bg-white p-4 shadow-panel">
+              <p className="text-sm font-semibold">Evidencias</p>
+              <p className="mt-2 text-sm text-field-muted">Pendiente</p>
+            </div>
+          </div>
+
+          <div className="mt-6 border border-field-line bg-white shadow-panel">
+            <div className="border-b border-field-line p-4">
+              <h3 className="text-lg font-semibold">Pruebas técnicas</h3>
+              <p className="mt-1 text-sm text-field-muted">Iteraciones de carga, nivelación y ajustes de parámetros.</p>
+            </div>
+
+            <form className="grid gap-3 border-b border-field-line p-4 md:grid-cols-3" onSubmit={handleCreateTestRun}>
+              <select className="border border-field-line px-3 py-3 text-sm" name="test_type_id" required>
+                <option value="">Tipo de prueba</option>
+                {testTypes.map((testType) => (
+                  <option key={testType.id} value={testType.id}>
+                    {testType.name}
+                  </option>
+                ))}
+              </select>
+              <input className="border border-field-line px-3 py-3 text-sm" name="technician_name" placeholder="Responsable" required />
+              <select className="border border-field-line px-3 py-3 text-sm" defaultValue="draft" name="status">
+                <option value="draft">Borrador</option>
+                <option value="in_progress">En proceso</option>
+                <option value="completed">Completada</option>
+                <option value="cancelled">Cancelada</option>
+              </select>
+              <input className="border border-field-line px-3 py-3 text-sm" name="started_at" type="datetime-local" />
+              <input className="border border-field-line px-3 py-3 text-sm" name="completed_at" type="datetime-local" />
+              <input className="border border-field-line px-3 py-3 text-sm" name="title" placeholder="Título" />
+              <textarea className="border border-field-line px-3 py-3 text-sm md:col-span-3" name="summary" placeholder="Resumen técnico" rows={2} />
+              <textarea className="border border-field-line px-3 py-3 text-sm md:col-span-3" name="notes" placeholder="Notas" rows={2} />
+              <button className="bg-field-info px-4 py-3 text-sm font-semibold text-white hover:bg-field-ink md:col-span-3" disabled={isSavingTestRun}>
+                {isSavingTestRun ? "Creando..." : "Nueva prueba"}
+              </button>
+            </form>
+
+            {testRuns.length === 0 ? <p className="p-4 text-sm text-field-muted">No hay pruebas registradas para este elevador.</p> : null}
+
+            <div className="grid gap-0">
+              {testRuns.map((testRun) => (
+                <Link
+                  className="grid gap-2 border-b border-field-line p-4 hover:bg-field-bg md:grid-cols-[1fr_120px_180px]"
+                  href={`/test-runs/${testRun.id}`}
+                  key={testRun.id}
+                >
+                  <div>
+                    <p className="text-sm font-semibold">{testRun.title || testRun.test_type_name}</p>
+                    <p className="mt-1 text-sm text-field-muted">{testRun.summary || testRun.notes || "Sin resumen técnico"}</p>
+                  </div>
+                  <span className="text-sm">{statusLabels[testRun.status]}</span>
+                  <span className="text-sm text-field-muted">{testRun.technician_name}</span>
+                </Link>
+              ))}
+            </div>
           </div>
 
           <div className="mt-6 border border-field-line bg-white shadow-panel">

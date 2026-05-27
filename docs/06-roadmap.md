@@ -33,13 +33,13 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - [x] Corregir API CI para levantar PostgreSQL en GitHub Actions.
 
 ## Fase 3 — Pruebas y parámetros
-- [ ] Crear TestRun.
-- [ ] Crear ParameterDefinition.
-- [ ] Crear TestRunParameterValue.
-- [ ] Crear seed de parámetros.
+- [x] Crear TestRun.
+- [x] Crear ParameterDefinition.
+- [x] Crear TestRunParameterValue.
+- [x] Crear seed de parámetros.
 - [ ] Crear endpoint para crear TestRun precargando parámetros desde prueba anterior.
-- [ ] Crear validación HEX->decimal.
-- [ ] Crear validación min/max.
+- [x] Crear validación HEX->decimal.
+- [x] Crear validación min/max.
 
 ## Fase 4 — Nivelación
 - [ ] Crear LevelingMeasurement.
@@ -68,11 +68,11 @@ Codex debe actualizar este archivo al terminar cada tarea:
 ## Fase 7 — Frontend operativo MVP
 - [ ] CRUD proyectos.
 - [ ] CRUD elevadores.
-- [ ] Detalle elevador.
-- [ ] Lista de pruebas.
-- [ ] Crear nueva prueba.
-- [ ] Editor de parámetros HEX/decimal.
-- [ ] Autosave local.
+- [x] Detalle elevador.
+- [x] Lista de pruebas.
+- [x] Crear nueva prueba.
+- [x] Editor de parámetros HEX/decimal.
+- [x] Autosave local.
 
 ## Fase 8 — Nivelación visual
 - [ ] Crear mapa de 62 pisos.
@@ -119,3 +119,12 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - Fix técnico cerrado: pytest usa un engine propio con `TEST_DATABASE_URL`, valida que sea una base de test y no toca la base de desarrollo.
 - GitHub Actions de API levanta PostgreSQL como service container y ejecuta pytest con `APP_ENV=test`.
 - Siguiente slice recomendado: Fase 3, crear `TestRun`, `ParameterDefinition`, `TestRunParameterValue`, seed de parámetros y validación HEX/decimal.
+
+## Notas de Slice 3
+- Se implementaron `TestRun`, `ParameterDefinition` y `TestRunParameterValue`.
+- Se agregó migración Alembic con tablas, índices, constraints y seed inicial de parámetros técnicos.
+- Los valores HEX se normalizan en backend, se convierten a decimal y rechazan entradas inválidas.
+- El guardado bulk de parámetros valida pares min/max por metadata (`bound_type` + `pair_code`) y evita persistencia parcial si hay errores.
+- El frontend permite crear/listar pruebas desde el detalle de elevador y editar parámetros desde `/test-runs/{testRunId}`.
+- El editor de parámetros muestra preview decimal, errores HEX inline, errores backend y borrador local en `localStorage`.
+- Siguiente slice recomendado: Fase 4, crear mediciones de nivelación piso a piso (`LevelingMeasurement`) con bulk save y tolerancias mínimas.

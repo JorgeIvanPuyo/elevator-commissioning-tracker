@@ -79,14 +79,13 @@ Base:
 - `POST /elevators/{elevator_id}/test-runs`
 - `GET /test-runs/{test_run_id}`
 - `PATCH /test-runs/{test_run_id}`
-- `POST /test-runs/{test_run_id}/complete`
 - `DELETE /test-runs/{test_run_id}`
 
 ### Parameters
 - `GET /parameter-definitions`
+- `GET /parameter-definitions/{parameter_id}`
 - `GET /test-runs/{test_run_id}/parameters`
 - `PUT /test-runs/{test_run_id}/parameters`
-- `POST /test-runs/{test_run_id}/parameters/validate`
 
 ### Measurements
 - `GET /test-runs/{test_run_id}/leveling-measurements`
@@ -111,6 +110,8 @@ Base:
 - Fechas en ISO 8601.
 - IDs UUID.
 - Decimal derivado de HEX en backend.
+- HEX normalizado en mayúsculas y sin prefijo `0x`.
+- Validaciones min/max de parámetros ejecutadas en backend.
 - Métricas calculadas deben venir listas para el frontend.
 - No romper contratos una vez usados por frontend.
 

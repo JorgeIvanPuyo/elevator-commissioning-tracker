@@ -7,6 +7,13 @@ Monorepo for elevator load testing and fine leveling traceability.
 - `apps/api`: FastAPI backend.
 - `apps/web`: Next.js frontend.
 
+## Current MVP Scope
+
+- Projects, elevators and elevator-specific floors.
+- Test runs per elevator with manual technician name and status.
+- Parameter definitions seeded for load, leveling and compensation workflows.
+- HEX parameter capture with backend decimal conversion and min/max validation.
+
 ## Local Development
 
 Backend and databases run with Docker Compose:
@@ -35,6 +42,7 @@ Open `http://localhost:3000`.
 
 ```bash
 docker-compose run --rm --build api alembic upgrade head
+docker-compose run --rm --build api pytest
 docker-compose run --rm api pytest
 ```
 

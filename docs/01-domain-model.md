@@ -85,19 +85,22 @@ Ejecución concreta de una prueba o iteración técnica.
 
 Campos:
 - `id`
-- `project_id`
 - `elevator_id`
 - `test_type_id`
-- `run_number`
-- `title`
 - `status` (`draft`, `in_progress`, `completed`, `cancelled`)
-- `performed_at`
 - `technician_name` manual, requerido en MVP porque no hay autenticación
+- `started_at`
+- `completed_at`
+- `title`
 - `summary`
-- `observations`
-- `previous_test_run_id` opcional para comparar contra ejecución previa
+- `notes`
 - `created_at`
 - `updated_at`
+
+Reglas:
+- Un `TestRun` pertenece a un elevador y a un tipo de prueba.
+- No se implementa flujo rígido de transiciones todavía.
+- La comparación contra una ejecución previa queda para un slice posterior.
 
 ### LoadTestData
 Datos específicos de prueba de carga.
@@ -127,14 +130,15 @@ Campos:
 - `code` (ej. 026D, 273, 022F)
 - `name`
 - `description`
-- `group`
+- `category`
 - `zone` (`low`, `mid`, `high`, null)
 - `direction` (`up`, `down`, null)
-- `bias_type` (`up_bias`, `down_bias`, null)
 - `bound_type` (`min`, `max`, null)
-- `unit`
-- `is_hex`
+- `pair_code` para validar pares min/max
+- `is_editable`
 - `sort_order`
+- `created_at`
+- `updated_at`
 
 ### TestRunParameterValue
 Valor de un parámetro en una prueba.
@@ -154,6 +158,9 @@ Campos:
 Regla:
 - El backend debe calcular `decimal_value` a partir de `hex_value`.
 - El frontend debe mostrar `HEX (decimal)`.
+- El HEX se guarda normalizado en mayúsculas y sin prefijo `0x`.
+- La combinación `test_run_id + parameter_definition_id` es única.
+- Si ambos valores de un par min/max existen, el máximo debe ser mayor o igual al mínimo.
 
 ### LevelingMeasurement
 Medición de nivelación por piso y dirección.

@@ -85,6 +85,9 @@ Mientras el usuario edita una prueba:
 - Al enviar exitosamente al backend, limpiar el draft local.
 - Si existe draft al abrir, ofrecer restaurar.
 
+En el Slice 3 el autosave inicial queda aplicado al editor de parámetros con la clave:
+`elevator-commissioning:test-run:{testRunId}:parameters-draft`.
+
 ## Estados UI
 - `draft`
 - `saving`

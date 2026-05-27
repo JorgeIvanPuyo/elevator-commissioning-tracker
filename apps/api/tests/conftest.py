@@ -11,6 +11,7 @@ from app.db import models  # noqa: F401
 from app.db.base import Base
 from app.db.session import get_db_session
 from app.main import app
+from app.services.parameter_definition_seed import seed_parameter_definitions
 from app.services.test_type_seed import seed_test_types
 
 
@@ -42,6 +43,7 @@ async def test_session_factory(test_database_url: str):
 
     async with TestSessionLocal() as session:
         await seed_test_types(session)
+        await seed_parameter_definitions(session)
         await session.commit()
 
     async def override_get_db_session() -> AsyncIterator[AsyncSession]:

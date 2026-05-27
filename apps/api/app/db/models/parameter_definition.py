@@ -8,15 +8,19 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 
-class TestType(Base):
-    __tablename__ = "test_types"
+class ParameterDefinition(Base):
+    __tablename__ = "parameter_definitions"
 
     id: Mapped[UUID] = mapped_column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    code: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
-    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(180), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
-    documentation_slug: Mapped[str | None] = mapped_column(String(160))
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    category: Mapped[str | None] = mapped_column(String(80), index=True)
+    zone: Mapped[str | None] = mapped_column(String(80))
+    direction: Mapped[str | None] = mapped_column(String(80))
+    bound_type: Mapped[str | None] = mapped_column(String(16))
+    pair_code: Mapped[str | None] = mapped_column(String(32))
+    is_editable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
@@ -26,4 +30,4 @@ class TestType(Base):
         nullable=False,
     )
 
-    test_runs = relationship("TestRun", back_populates="test_type")
+    values = relationship("TestRunParameterValue", back_populates="parameter_definition")

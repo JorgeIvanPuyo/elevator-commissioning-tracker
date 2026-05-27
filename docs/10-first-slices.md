@@ -22,27 +22,18 @@ Resultado esperado:
 - Tests.
 - Frontend aún no necesario.
 
-## Slice 3 — Frontend shell
-Objetivo:
-Crear Next.js app con layout principal, dashboard vacío y navegación.
-
-Resultado esperado:
-- Vercel-ready.
-- API client central.
-- Layout responsive.
-
-## Slice 4 — TestRun + Parameters
+## Slice 3 — TestRun + Parameters
 Objetivo:
 Registrar una prueba y sus parámetros, con conversión HEX/decimal y validación min/max.
 
 Resultado esperado:
 - Crear prueba.
-- Precargar parámetros desde prueba anterior.
 - Editar parámetros.
 - Guardar.
 - Validar min/max.
+- Proteger borrador local del editor de parámetros.
 
-## Slice 5 — Nivelación piso a piso
+## Slice 4 — Nivelación piso a piso
 Objetivo:
 Registrar mediciones y calcular KPIs mínimos.
 
@@ -52,7 +43,7 @@ Resultado esperado:
 - Resumen por prueba.
 - Mapa inicial de pisos en frontend.
 
-## Slice 6 — Evidencias
+## Slice 5 — Evidencias
 Objetivo:
 Subir foto/video a GCS y asociarlo a una prueba.
 

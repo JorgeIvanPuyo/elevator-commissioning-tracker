@@ -1,9 +1,23 @@
-import type { Elevator, ElevatorCreate, ElevatorFloor, ElevatorFloorUpdate, Project, ProjectCreate, TestType } from "@/types/api";
+import type {
+  Elevator,
+  ElevatorCreate,
+  ElevatorFloor,
+  ElevatorFloorUpdate,
+  ParameterDefinition,
+  Project,
+  ProjectCreate,
+  TestRun,
+  TestRunCreate,
+  TestRunParameterValueInput,
+  TestRunParameterValuesResponse,
+  TestRunUpdate,
+  TestType,
+} from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
 };
 
@@ -47,4 +61,17 @@ export const api = {
   updateElevatorFloor: (floorId: string, payload: ElevatorFloorUpdate) =>
     request<ElevatorFloor>(`/api/v1/elevator-floors/${floorId}`, { method: "PATCH", body: payload }),
   listTestTypes: () => request<TestType[]>("/api/v1/test-types"),
+  listElevatorTestRuns: (elevatorId: string) => request<TestRun[]>(`/api/v1/elevators/${elevatorId}/test-runs`),
+  createTestRun: (elevatorId: string, payload: TestRunCreate) =>
+    request<TestRun>(`/api/v1/elevators/${elevatorId}/test-runs`, { method: "POST", body: payload }),
+  getTestRun: (testRunId: string) => request<TestRun>(`/api/v1/test-runs/${testRunId}`),
+  updateTestRun: (testRunId: string, payload: TestRunUpdate) =>
+    request<TestRun>(`/api/v1/test-runs/${testRunId}`, { method: "PATCH", body: payload }),
+  listParameterDefinitions: () => request<ParameterDefinition[]>("/api/v1/parameter-definitions?limit=200"),
+  listTestRunParameters: (testRunId: string) => request<TestRunParameterValuesResponse>(`/api/v1/test-runs/${testRunId}/parameters`),
+  saveTestRunParameters: (testRunId: string, values: TestRunParameterValueInput[]) =>
+    request<TestRunParameterValuesResponse>(`/api/v1/test-runs/${testRunId}/parameters`, {
+      method: "PUT",
+      body: { values },
+    }),
 };

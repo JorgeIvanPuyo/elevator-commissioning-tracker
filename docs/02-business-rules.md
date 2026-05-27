@@ -93,9 +93,18 @@ entonces los parámetros pueden estar bien y se recomienda revisar/mover física
 
 ## Validación de parámetros min/max
 
+### Captura HEX
+- Los parámetros se capturan como HEX sin requerir prefijo `0x`.
+- El backend acepta `40`, `0x40` y `0X40`.
+- El valor guardado se normaliza a mayúsculas y sin prefijo, por ejemplo `0x40` -> `40`.
+- El backend calcula y guarda `decimal_value`, por ejemplo `40` -> `64`.
+- Valores no HEX como `ZZ`, `12G` o texto libre se rechazan con error controlado.
+- Si el HEX se envía vacío, el valor HEX y decimal quedan nulos.
+
 Para los parámetros de bias por zona, dirección y límite:
 - El valor MAX debe ser mayor o igual al valor MIN del mismo campo técnico.
-- Si MAX < MIN, mostrar alerta visual y bloquear guardado final, salvo que se permita guardar como borrador.
+- Si MAX < MIN, el backend bloquea el guardado de parámetros para evitar trazabilidad inconsistente.
+- El guardado bulk de parámetros debe ser transaccional: un error no debe persistir valores parciales.
 
 Pares conocidos:
 - 026D = MIN / low zone / up bias

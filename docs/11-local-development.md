@@ -86,4 +86,7 @@ docker-compose -f docker-compose.yml -f docker-compose.full.yml up --build
 
 ## LocalStorage Note
 
-Long-form draft persistence with `localStorage` is intentionally deferred to Slice 4, when test runs and parameter forms are implemented.
+Slice 3 uses `localStorage` only for unsaved edits in the TestRun parameter editor:
+`elevator-commissioning:test-run:{testRunId}:parameters-draft`.
+
+Longer draft persistence for floor-by-floor measurements remains deferred.

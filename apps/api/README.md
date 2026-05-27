@@ -2,6 +2,18 @@
 
 FastAPI backend for Megapolis elevator traceability.
 
+## Implemented Domain
+
+- `Project`
+- `Elevator`
+- `ElevatorFloor`
+- `TestType`
+- `TestRun`
+- `ParameterDefinition`
+- `TestRunParameterValue`
+
+Parameter values accept HEX input, store normalized HEX, and calculate decimal values in the backend.
+
 ## Run Locally
 
 ```bash
@@ -12,6 +24,7 @@ docker-compose up --build api postgres
 ## Tests
 
 ```bash
+docker-compose run --rm --build api pytest
 docker-compose run --rm api pytest
 ```
 
