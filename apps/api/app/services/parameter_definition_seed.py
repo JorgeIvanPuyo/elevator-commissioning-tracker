@@ -5,11 +5,6 @@ from app.db.models import ParameterDefinition
 
 
 PARAMETER_DEFINITION_SEED_DATA = [
-    {"code": "A61E", "name": "0% load setup", "category": "load_test", "sort_order": 10},
-    {"code": "A62E", "name": "100% load setup", "category": "load_test", "sort_order": 20},
-    {"code": "A65E", "name": "Automatic leveling without load", "category": "auto_leveling", "sort_order": 30},
-    {"code": "A66E", "name": "Automatic leveling with 100% load", "category": "auto_leveling", "sort_order": 40},
-    {"code": "A67E", "name": "Automatic load compensation", "category": "load_compensation", "sort_order": 50},
     {
         "code": "026D",
         "name": "Low zone up bias minimum",

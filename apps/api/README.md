@@ -9,10 +9,12 @@ FastAPI backend for Megapolis elevator traceability.
 - `ElevatorFloor`
 - `TestType`
 - `TestRun`
+- `TestRunProcessStep`
 - `ParameterDefinition`
 - `TestRunParameterValue`
 
 Parameter values accept HEX input, store normalized HEX, and calculate decimal values in the backend.
+A61E, A62E, A65E, A66E and A67E are process steps, not editable HEX parameters.
 
 ## Run Locally
 
@@ -51,3 +53,10 @@ docker-compose run --rm --build api alembic upgrade head
 
 - `GET /health`
 - `GET /api/v1/health`
+
+## Test Run Endpoints
+
+- `GET /api/v1/test-runs/{test_run_id}/process-steps`
+- `PATCH /api/v1/test-run-process-steps/{process_step_id}`
+- `GET /api/v1/test-runs/{test_run_id}/parameters`
+- `PUT /api/v1/test-runs/{test_run_id}/parameters`

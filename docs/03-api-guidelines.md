@@ -80,6 +80,8 @@ Base:
 - `GET /test-runs/{test_run_id}`
 - `PATCH /test-runs/{test_run_id}`
 - `DELETE /test-runs/{test_run_id}`
+- `GET /test-runs/{test_run_id}/process-steps`
+- `PATCH /test-run-process-steps/{process_step_id}`
 
 ### Parameters
 - `GET /parameter-definitions`
@@ -90,7 +92,10 @@ Base:
 ### Measurements
 - `GET /test-runs/{test_run_id}/leveling-measurements`
 - `PUT /test-runs/{test_run_id}/leveling-measurements/bulk`
+- `DELETE /leveling-measurements/{measurement_id}`
 - `GET /elevators/{elevator_id}/leveling-summary`
+
+El bulk de mediciones calcula en backend `effective_final_mm`, `is_final_within_tolerance` y `did_relevel`. El payload no debe depender de una bandera manual de renivelación.
 
 ### Evidence
 - `POST /test-runs/{test_run_id}/evidence`
@@ -111,8 +116,10 @@ Base:
 - IDs UUID.
 - Decimal derivado de HEX en backend.
 - HEX normalizado en mayúsculas y sin prefijo `0x`.
-- Validaciones min/max de parámetros ejecutadas en backend.
+- Validaciones min/max de parámetros ejecutadas en backend como warnings no bloqueantes.
+- Errores bloqueantes: HEX inválido, parámetro desconocido, payload inválido.
 - Métricas calculadas deben venir listas para el frontend.
+- Mediciones de nivelación deben retornar `effective_final_mm`, `is_final_within_tolerance` y resumen agregado.
 - No romper contratos una vez usados por frontend.
 
 ## Paginación

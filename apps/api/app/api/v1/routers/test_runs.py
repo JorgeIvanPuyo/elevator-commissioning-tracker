@@ -7,7 +7,9 @@ from app.api.v1.dependencies import to_http_exception
 from app.core.exceptions import AppError
 from app.db.session import get_db_session
 from app.schemas.parameter import TestRunParameterValuesResponse, TestRunParameterValuesUpsert
+from app.schemas.process_step import TestRunProcessStepRead, TestRunProcessStepUpdate
 from app.schemas.test_run import TestRunCreate, TestRunRead, TestRunUpdate
+from app.services import process_steps as process_step_service
 from app.services import test_run_parameters as parameter_value_service
 from app.services import test_runs as test_run_service
 
@@ -102,5 +104,28 @@ async def upsert_test_run_parameters(
 ) -> TestRunParameterValuesResponse:
     try:
         return await parameter_value_service.upsert_test_run_parameters(session, test_run_id, payload)
+    except AppError as error:
+        raise to_http_exception(error) from error
+
+
+@router.get("/test-runs/{test_run_id}/process-steps", response_model=list[TestRunProcessStepRead])
+async def list_test_run_process_steps(
+    test_run_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+) -> list[TestRunProcessStepRead]:
+    try:
+        return await process_step_service.list_test_run_process_steps(session, test_run_id)
+    except AppError as error:
+        raise to_http_exception(error) from error
+
+
+@router.patch("/test-run-process-steps/{process_step_id}", response_model=TestRunProcessStepRead)
+async def update_test_run_process_step(
+    process_step_id: UUID,
+    payload: TestRunProcessStepUpdate,
+    session: AsyncSession = Depends(get_db_session),
+) -> TestRunProcessStepRead:
+    try:
+        return await process_step_service.update_process_step(session, process_step_id, payload)
     except AppError as error:
         raise to_http_exception(error) from error

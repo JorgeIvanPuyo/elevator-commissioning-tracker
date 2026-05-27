@@ -31,10 +31,11 @@ export default function ProjectsPage() {
 
   async function handleCreateProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setIsSaving(true);
     setError(null);
 
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const totalElevators = Number(form.get("total_elevators") || 0);
     const defaultFloorCount = Number(form.get("default_floor_count") || 62);
 
@@ -46,7 +47,7 @@ export default function ProjectsPage() {
         total_elevators: totalElevators || undefined,
         default_floor_count: defaultFloorCount,
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await loadProjects();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "No se pudo crear el proyecto");

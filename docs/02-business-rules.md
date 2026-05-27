@@ -2,9 +2,10 @@
 
 ## Reglas de prueba de carga
 
-### Parámetros clave
-- A61E configura referencia 0% de carga.
-- A62E configura referencia 100% de carga.
+### Procesos clave
+- A61E ejecuta la calibración de potenciómetros a 0% de carga.
+- A62E ejecuta la calibración de potenciómetros a 100% de carga.
+- A61E y A62E no son parámetros HEX editables; se registran como pasos completables dentro de la prueba.
 
 ### Voltajes esperados
 - Potenciómetro 0%: 4.03 VDC.
@@ -38,6 +39,7 @@ La prueba se considera exitosa si al ingresar 110% de carga:
 - A65E: ajuste automático de nivelación sin carga.
 - A66E: ajuste automático de nivelación con 100% de carga.
 - A67E: ajuste automático de compensación de carga.
+- A65E, A66E y A67E son procesos ejecutados desde el control, no valores de parámetros.
 
 ### Parámetros calculados por A65E/A66E
 - 026D, 026E, 026F, 270, 271, 272
@@ -51,10 +53,23 @@ La prueba se considera exitosa si al ingresar 110% de carga:
 ### Nivel final correcto
 `final_mm` está correcto si está dentro de ±5 mm.
 
+Para el registro inicial de mediciones:
+- Si `final_mm` existe, se usa como `effective_final_mm`.
+- Si `final_mm` no existe, se usa `landing_mm` como `effective_final_mm`.
+- Si no hay ningún valor, la tolerancia queda sin evaluar.
+- El origen y el destino de una medición deben ser pisos diferentes del mismo elevador.
+- El destino debe ser un piso con `is_leveling_required = true`.
+
 ### Renivelación aceptable
 La renivelación es aceptable si:
 - La diferencia inicial al aterrizar es menor o igual a 10 mm, y
 - El valor final queda dentro de ±5 mm.
+
+En el registro operativo, `did_relevel` se calcula automáticamente:
+- `true` si `final_mm` existe y es diferente de `landing_mm`.
+- `false` si `final_mm` es nulo o igual a `landing_mm`.
+
+Los KPIs avanzados de renivelación quedan diferidos.
 
 ### Histerisis aceptable
 La histerisis es aceptable si la diferencia absoluta entre resultado final subiendo y bajando para el mismo piso y tipo de viaje es menor o igual a 5 mm.
@@ -103,8 +118,9 @@ entonces los parámetros pueden estar bien y se recomienda revisar/mover física
 
 Para los parámetros de bias por zona, dirección y límite:
 - El valor MAX debe ser mayor o igual al valor MIN del mismo campo técnico.
-- Si MAX < MIN, el backend bloquea el guardado de parámetros para evitar trazabilidad inconsistente.
-- El guardado bulk de parámetros debe ser transaccional: un error no debe persistir valores parciales.
+- Si MAX < MIN, el backend permite guardar y retorna warning para trazabilidad.
+- El guardado bulk de parámetros debe ser transaccional para errores bloqueantes: un HEX inválido o parámetro desconocido no debe persistir valores parciales.
+- Las inconsistencias min/max son warnings no bloqueantes.
 
 Pares conocidos:
 - 026D = MIN / low zone / up bias

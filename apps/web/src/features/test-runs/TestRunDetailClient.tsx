@@ -6,12 +6,15 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api";
 import { fromDatetimeLocalValue, previewHexDecimal, toDatetimeLocalValue } from "@/lib/hex";
+import { LevelingMeasurementEditor } from "@/features/test-runs/LevelingMeasurementEditor";
 import type {
   Elevator,
   ParameterDefinition,
+  ParameterValidationWarning,
   TestRun,
   TestRunParameterValue,
   TestRunParameterValueInput,
+  TestRunProcessStep,
   TestRunStatus,
   TestType,
 } from "@/types/api";
@@ -37,11 +40,14 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
   const [testTypes, setTestTypes] = useState<TestType[]>([]);
   const [definitions, setDefinitions] = useState<ParameterDefinition[]>([]);
   const [savedValues, setSavedValues] = useState<TestRunParameterValue[]>([]);
+  const [processSteps, setProcessSteps] = useState<TestRunProcessStep[]>([]);
+  const [parameterWarnings, setParameterWarnings] = useState<ParameterValidationWarning[]>([]);
   const [draft, setDraft] = useState<DraftByCode>({});
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingRun, setIsSavingRun] = useState(false);
   const [isSavingParameters, setIsSavingParameters] = useState(false);
+  const [savingProcessStepId, setSavingProcessStepId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [parameterError, setParameterError] = useState<string | null>(null);
 
@@ -51,17 +57,20 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
     setIsLoading(true);
     setError(null);
     try {
-      const [runResponse, definitionResponse, parameterResponse, typeResponse] = await Promise.all([
+      const [runResponse, definitionResponse, parameterResponse, typeResponse, processStepResponse] = await Promise.all([
         api.getTestRun(testRunId),
         api.listParameterDefinitions(),
         api.listTestRunParameters(testRunId),
         api.listTestTypes(),
+        api.listTestRunProcessSteps(testRunId),
       ]);
       const elevatorResponse = await api.getElevator(runResponse.elevator_id);
       setTestRun(runResponse);
       setElevator(elevatorResponse);
       setDefinitions(definitionResponse);
       setSavedValues(parameterResponse.values);
+      setParameterWarnings(parameterResponse.validation_warnings);
+      setProcessSteps(processStepResponse);
       setTestTypes(typeResponse);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No se pudo cargar la prueba");
@@ -180,12 +189,26 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
     try {
       const response = await api.saveTestRunParameters(testRunId, values);
       setSavedValues(response.values);
+      setParameterWarnings(response.validation_warnings);
       window.localStorage.removeItem(draftKey);
       setHasLocalDraft(false);
     } catch (saveError) {
       setParameterError(saveError instanceof Error ? saveError.message : "No se pudieron guardar los parámetros");
     } finally {
       setIsSavingParameters(false);
+    }
+  }
+
+  async function updateProcessStep(processStep: TestRunProcessStep, patch: Partial<Pick<TestRunProcessStep, "is_completed" | "notes">>) {
+    setSavingProcessStepId(processStep.id);
+    setError(null);
+    try {
+      const updated = await api.updateTestRunProcessStep(processStep.id, patch);
+      setProcessSteps((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "No se pudo actualizar el proceso");
+    } finally {
+      setSavingProcessStepId(null);
     }
   }
 
@@ -244,6 +267,44 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
           </form>
 
           <div className="mt-6 border border-field-line bg-white shadow-panel">
+            <div className="border-b border-field-line p-4">
+              <h3 className="text-lg font-semibold">Procesos ejecutados</h3>
+              <p className="mt-1 text-sm text-field-muted">A61E-A67E son pasos técnicos, no parámetros HEX editables.</p>
+            </div>
+            <div className="grid gap-0">
+              {processSteps.map((processStep) => (
+                <div className="grid gap-3 border-b border-field-line p-4 md:grid-cols-[90px_1fr_160px_1fr]" key={processStep.id}>
+                  <span className="text-sm font-semibold">{processStep.code}</span>
+                  <div>
+                    <p className="text-sm font-medium">{processStep.name}</p>
+                    <p className="mt-1 text-sm text-field-muted">{processStep.description}</p>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      checked={processStep.is_completed}
+                      disabled={savingProcessStepId === processStep.id}
+                      onChange={(event) => void updateProcessStep(processStep, { is_completed: event.currentTarget.checked })}
+                      type="checkbox"
+                    />
+                    Completado
+                  </label>
+                  <input
+                    className="border border-field-line px-3 py-2 text-sm"
+                    defaultValue={processStep.notes ?? ""}
+                    disabled={savingProcessStepId === processStep.id}
+                    onBlur={(event) => {
+                      if (event.currentTarget.value !== (processStep.notes ?? "")) {
+                        void updateProcessStep(processStep, { notes: event.currentTarget.value });
+                      }
+                    }}
+                    placeholder="Notas del proceso"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 border border-field-line bg-white shadow-panel">
             <div className="flex flex-col gap-3 border-b border-field-line p-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-lg font-semibold">Parámetros HEX</h3>
@@ -256,11 +317,23 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
 
             {hasLocalDraft ? <p className="border-b border-field-line bg-field-bg p-3 text-sm text-field-warn">Hay cambios locales sin guardar.</p> : null}
             {parameterError ? <p className="border-b border-field-line p-3 text-sm text-field-fail">{parameterError}</p> : null}
+            {parameterWarnings.length > 0 ? (
+              <div className="grid gap-2 border-b border-field-line bg-field-bg p-3">
+                {parameterWarnings.map((warning) => (
+                  <p className="text-sm text-field-warn" key={`${warning.type}-${warning.parameter_code}-${warning.paired_parameter_code}`}>
+                    {warning.message}
+                  </p>
+                ))}
+              </div>
+            ) : null}
 
             <div className="grid gap-0">
               {definitions.map((definition) => {
                 const row = draft[definition.code] ?? { hex_value: "", source: "manual", notes: "" };
                 const preview = previewHexDecimal(row.hex_value);
+                const fieldWarnings = parameterWarnings.filter(
+                  (warning) => warning.parameter_code === definition.code || warning.paired_parameter_code === definition.code,
+                );
                 return (
                   <div className="grid gap-3 border-b border-field-line p-4 lg:grid-cols-[90px_1fr_120px_120px_140px_1fr]" key={definition.id}>
                     <span className="text-sm font-semibold">{definition.code}</span>
@@ -275,6 +348,11 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
                         value={row.hex_value}
                       />
                       {preview.error ? <p className="mt-1 text-xs text-field-fail">{preview.error}</p> : null}
+                      {fieldWarnings.map((warning) => (
+                        <p className="mt-1 text-xs text-field-warn" key={warning.message}>
+                          {warning.message}
+                        </p>
+                      ))}
                     </div>
                     <span className="text-sm text-field-muted">{preview.decimal === null ? "-" : preview.decimal}</span>
                     <input
@@ -293,6 +371,8 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
               })}
             </div>
           </div>
+
+          <LevelingMeasurementEditor testRun={testRun} />
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link className="inline-flex border border-field-line bg-white px-4 py-3 text-sm font-semibold" href={`/elevators/${testRun.elevator_id}`}>

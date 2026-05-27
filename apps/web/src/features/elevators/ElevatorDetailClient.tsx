@@ -65,9 +65,10 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
 
   async function handleCreateTestRun(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setIsSavingTestRun(true);
     setError(null);
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
 
     try {
       await api.createTestRun(elevatorId, {
@@ -80,7 +81,7 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
         summary: String(form.get("summary") || "") || null,
         notes: String(form.get("notes") || "") || null,
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await loadElevator();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "No se pudo crear la prueba");

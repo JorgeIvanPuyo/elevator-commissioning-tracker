@@ -104,10 +104,38 @@ async def test_list_seeded_parameter_definitions(client) -> None:
 
     assert response.status_code == 200
     codes = [item["code"] for item in response.json()]
-    assert "A61E" in codes
     assert "026D" in codes
     assert "273" in codes
     assert "022F" in codes
+    assert all(code not in codes for code in ["A61E", "A62E", "A65E", "A66E", "A67E"])
+
+
+async def test_process_steps_are_created_for_test_run(client) -> None:
+    elevator = await create_elevator(client)
+    test_run = await create_test_run(client, elevator["id"])
+
+    response = await client.get(f"/api/v1/test-runs/{test_run['id']}/process-steps")
+
+    assert response.status_code == 200
+    steps = response.json()
+    assert [step["code"] for step in steps] == ["A61E", "A62E", "A65E", "A66E", "A67E"]
+    assert all(step["is_completed"] is False for step in steps)
+
+
+async def test_process_step_can_be_completed_with_notes(client) -> None:
+    elevator = await create_elevator(client)
+    test_run = await create_test_run(client, elevator["id"])
+    steps = (await client.get(f"/api/v1/test-runs/{test_run['id']}/process-steps")).json()
+
+    response = await client.patch(
+        f"/api/v1/test-run-process-steps/{steps[0]['id']}",
+        json={"is_completed": True, "notes": "Ejecutado en control"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["is_completed"] is True
+    assert response.json()["completed_at"] is not None
+    assert response.json()["notes"] == "Ejecutado en control"
 
 
 def test_hex_utility_accepts_and_normalizes_values() -> None:
@@ -192,7 +220,7 @@ async def test_min_max_pair_success_when_max_is_greater_or_equal(client) -> None
     assert values["273"]["decimal_value"] == 69
 
 
-async def test_reject_min_max_pair_when_max_is_less_than_min(client) -> None:
+async def test_min_max_pair_warning_when_max_is_less_than_min(client) -> None:
     elevator = await create_elevator(client)
     test_run = await create_test_run(client, elevator["id"])
 
@@ -206,8 +234,41 @@ async def test_reject_min_max_pair_when_max_is_less_than_min(client) -> None:
         },
     )
 
-    assert response.status_code == 400
-    assert "273 must be greater than or equal to 026D" in response.json()["detail"]
+    assert response.status_code == 200
+    body = response.json()
+    values = {item["parameter_code"]: item for item in body["values"]}
+    assert values["026D"]["decimal_value"] == 69
+    assert values["273"]["decimal_value"] == 64
+    assert body["validation_warnings"] == [
+        {
+            "type": "MIN_MAX_INCONSISTENCY",
+            "parameter_code": "273",
+            "paired_parameter_code": "026D",
+            "message": "El valor máximo 273 es menor que el mínimo 026D.",
+            "severity": "warning",
+        }
+    ]
+
+
+async def test_min_max_warning_does_not_roll_back_bulk_save(client) -> None:
+    elevator = await create_elevator(client)
+    test_run = await create_test_run(client, elevator["id"])
+
+    response = await client.put(
+        f"/api/v1/test-runs/{test_run['id']}/parameters",
+        json={
+            "values": [
+                {"parameter_code": "026D", "hex_value": "45"},
+                {"parameter_code": "273", "hex_value": "40"},
+            ]
+        },
+    )
+    persisted = await client.get(f"/api/v1/test-runs/{test_run['id']}/parameters")
+
+    assert response.status_code == 200
+    assert persisted.status_code == 200
+    assert len(persisted.json()["values"]) == 2
+    assert persisted.json()["validation_warnings"]
 
 
 async def test_invalid_bulk_update_does_not_persist_partial_values(client) -> None:

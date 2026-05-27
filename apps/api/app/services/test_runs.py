@@ -7,6 +7,7 @@ from app.core.exceptions import AppError, NotFoundError
 from app.db.models import TestRun, TestType
 from app.schemas.test_run import TestRunCreate, TestRunUpdate
 from app.services.elevators import get_elevator
+from app.services.process_steps import create_default_process_steps
 
 
 async def create_test_run(session: AsyncSession, elevator_id: UUID, payload: TestRunCreate) -> dict:
@@ -15,6 +16,8 @@ async def create_test_run(session: AsyncSession, elevator_id: UUID, payload: Tes
 
     test_run = TestRun(elevator_id=elevator_id, **payload.model_dump())
     session.add(test_run)
+    await session.flush()
+    await create_default_process_steps(session, test_run.id)
     await session.commit()
     await session.refresh(test_run)
     return await get_test_run(session, test_run.id)

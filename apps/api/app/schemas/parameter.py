@@ -49,7 +49,15 @@ class TestRunParameterValueRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ParameterValidationWarning(BaseModel):
+    type: str
+    parameter_code: str
+    paired_parameter_code: str
+    message: str
+    severity: str = "warning"
+
+
 class TestRunParameterValuesResponse(BaseModel):
     test_run_id: UUID
     values: list[TestRunParameterValueRead]
-    validation_warnings: list[str] = []
+    validation_warnings: list[ParameterValidationWarning] = []

@@ -13,7 +13,9 @@ from app.utils.hex_values import normalize_hex_value
 async def list_test_run_parameters(session: AsyncSession, test_run_id: UUID) -> dict:
     await get_test_run_model(session, test_run_id)
     values = await _list_values(session, test_run_id)
-    return {"test_run_id": test_run_id, "values": values, "validation_warnings": []}
+    decimal_values = {value["parameter_code"]: value["decimal_value"] for value in values}
+    warnings = _build_min_max_warnings(await _get_all_paired_definitions(session), decimal_values)
+    return {"test_run_id": test_run_id, "values": values, "validation_warnings": warnings}
 
 
 async def upsert_test_run_parameters(session: AsyncSession, test_run_id: UUID, payload: TestRunParameterValuesUpsert) -> dict:
@@ -46,7 +48,7 @@ async def upsert_test_run_parameters(session: AsyncSession, test_run_id: UUID, p
     final_decimals = await _build_final_decimal_map(session, test_run_id)
     for item in normalized_inputs:
         final_decimals[item["parameter_code"]] = item["decimal_value"]
-    _validate_min_max_pairs(await _get_all_paired_definitions(session), final_decimals)
+    warnings = _build_min_max_warnings(await _get_all_paired_definitions(session), final_decimals)
 
     for item in normalized_inputs:
         definition = item["definition"]
@@ -69,7 +71,9 @@ async def upsert_test_run_parameters(session: AsyncSession, test_run_id: UUID, p
             existing.notes = item["notes"]
 
     await session.commit()
-    return await list_test_run_parameters(session, test_run_id)
+    response = await list_test_run_parameters(session, test_run_id)
+    response["validation_warnings"] = warnings
+    return response
 
 
 async def _list_values(session: AsyncSession, test_run_id: UUID) -> list[dict]:
@@ -121,7 +125,8 @@ async def _get_all_paired_definitions(session: AsyncSession) -> list[ParameterDe
     return list(result)
 
 
-def _validate_min_max_pairs(definitions: list[ParameterDefinition], decimal_values: dict[str, int | None]) -> None:
+def _build_min_max_warnings(definitions: list[ParameterDefinition], decimal_values: dict[str, int | None]) -> list[dict]:
+    warnings = []
     definitions_by_code = {definition.code: definition for definition in definitions}
     for definition in definitions:
         if definition.bound_type != "min" or definition.pair_code is None:
@@ -132,7 +137,16 @@ def _validate_min_max_pairs(definitions: list[ParameterDefinition], decimal_valu
         min_value = decimal_values.get(definition.code)
         max_value = decimal_values.get(pair.code)
         if min_value is not None and max_value is not None and max_value < min_value:
-            raise AppError(f"Invalid min/max pair: {pair.code} must be greater than or equal to {definition.code}")
+            warnings.append(
+                {
+                    "type": "MIN_MAX_INCONSISTENCY",
+                    "parameter_code": pair.code,
+                    "paired_parameter_code": definition.code,
+                    "message": f"El valor máximo {pair.code} es menor que el mínimo {definition.code}.",
+                    "severity": "warning",
+                }
+            )
+    return warnings
 
 
 def _serialize_value(value: TestRunParameterValue, definition: ParameterDefinition) -> dict:

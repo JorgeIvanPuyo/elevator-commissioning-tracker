@@ -3,6 +3,10 @@ import type {
   ElevatorCreate,
   ElevatorFloor,
   ElevatorFloorUpdate,
+  LevelingDirection,
+  LevelingMeasurementBulkItem,
+  LevelingMeasurementBulkResponse,
+  LevelingTravelType,
   ParameterDefinition,
   Project,
   ProjectCreate,
@@ -10,6 +14,8 @@ import type {
   TestRunCreate,
   TestRunParameterValueInput,
   TestRunParameterValuesResponse,
+  TestRunProcessStep,
+  TestRunProcessStepUpdate,
   TestRunUpdate,
   TestType,
 } from "@/types/api";
@@ -74,4 +80,24 @@ export const api = {
       method: "PUT",
       body: { values },
     }),
+  listTestRunProcessSteps: (testRunId: string) => request<TestRunProcessStep[]>(`/api/v1/test-runs/${testRunId}/process-steps`),
+  updateTestRunProcessStep: (processStepId: string, payload: TestRunProcessStepUpdate) =>
+    request<TestRunProcessStep>(`/api/v1/test-run-process-steps/${processStepId}`, { method: "PATCH", body: payload }),
+  listLevelingMeasurements: (testRunId: string, direction?: LevelingDirection, travelType?: LevelingTravelType) => {
+    const params = new URLSearchParams();
+    if (direction) {
+      params.set("direction", direction);
+    }
+    if (travelType) {
+      params.set("travel_type", travelType);
+    }
+    const query = params.toString();
+    return request<LevelingMeasurementBulkResponse>(`/api/v1/test-runs/${testRunId}/leveling-measurements${query ? `?${query}` : ""}`);
+  },
+  saveLevelingMeasurements: (testRunId: string, items: LevelingMeasurementBulkItem[]) =>
+    request<LevelingMeasurementBulkResponse>(`/api/v1/test-runs/${testRunId}/leveling-measurements/bulk`, {
+      method: "PUT",
+      body: { items },
+    }),
+  deleteLevelingMeasurement: (measurementId: string) => request<void>(`/api/v1/leveling-measurements/${measurementId}`, { method: "DELETE" }),
 };

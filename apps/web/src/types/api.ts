@@ -135,10 +135,18 @@ export type TestRunParameterValue = {
   updated_at: string;
 };
 
+export type ParameterValidationWarning = {
+  type: string;
+  parameter_code: string;
+  paired_parameter_code: string;
+  message: string;
+  severity: "warning";
+};
+
 export type TestRunParameterValuesResponse = {
   test_run_id: string;
   values: TestRunParameterValue[];
-  validation_warnings: string[];
+  validation_warnings: ParameterValidationWarning[];
 };
 
 export type TestRunParameterValueInput = {
@@ -146,4 +154,67 @@ export type TestRunParameterValueInput = {
   hex_value?: string | null;
   source?: string | null;
   notes?: string | null;
+};
+
+export type TestRunProcessStep = {
+  id: string;
+  test_run_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  is_completed: boolean;
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TestRunProcessStepUpdate = {
+  is_completed?: boolean;
+  completed_at?: string | null;
+  notes?: string | null;
+};
+
+export type LevelingDirection = "up" | "down";
+export type LevelingTravelType = "short" | "long";
+
+export type LevelingMeasurement = {
+  id: string;
+  test_run_id: string;
+  origin_floor_id: string;
+  destination_floor_id: string;
+  direction: LevelingDirection;
+  travel_type: LevelingTravelType;
+  landing_mm: number | null;
+  final_mm: number | null;
+  did_relevel: boolean;
+  renivelation_occurred: boolean;
+  effective_final_mm: number | null;
+  is_final_within_tolerance: boolean | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LevelingMeasurementBulkItem = {
+  origin_floor_id: string;
+  destination_floor_id: string;
+  direction: LevelingDirection;
+  travel_type: LevelingTravelType;
+  landing_mm?: number | null;
+  final_mm?: number | null;
+  notes?: string | null;
+};
+
+export type LevelingMeasurementSummary = {
+  total: number;
+  with_values: number;
+  within_tolerance: number;
+  outside_tolerance: number;
+  within_tolerance_percentage: number;
+};
+
+export type LevelingMeasurementBulkResponse = {
+  items: LevelingMeasurement[];
+  summary: LevelingMeasurementSummary;
 };

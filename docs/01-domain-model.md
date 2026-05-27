@@ -99,8 +99,29 @@ Campos:
 
 Reglas:
 - Un `TestRun` pertenece a un elevador y a un tipo de prueba.
+- Un `TestRun` puede tener pasos técnicos ejecutados y valores de parámetros capturados.
 - No se implementa flujo rígido de transiciones todavía.
 - La comparación contra una ejecución previa queda para un slice posterior.
+
+### TestRunProcessStep
+Paso/proceso técnico ejecutado dentro de una prueba.
+
+Campos:
+- `id`
+- `test_run_id`
+- `code` (`A61E`, `A62E`, `A65E`, `A66E`, `A67E`)
+- `name`
+- `description`
+- `is_completed`
+- `completed_at`
+- `notes`
+- `created_at`
+- `updated_at`
+
+Reglas:
+- Los códigos `A61E`, `A62E`, `A65E`, `A66E` y `A67E` son procesos técnicos, no parámetros HEX editables.
+- Deben mostrarse como checklist técnico asociado al `TestRun`.
+- Pueden marcarse como completados/no completados y registrar notas.
 
 ### LoadTestData
 Datos específicos de prueba de carga.
@@ -155,12 +176,12 @@ Campos:
 - `created_at`
 - `updated_at`
 
-Regla:
+Reglas:
 - El backend debe calcular `decimal_value` a partir de `hex_value`.
 - El frontend debe mostrar `HEX (decimal)`.
 - El HEX se guarda normalizado en mayúsculas y sin prefijo `0x`.
 - La combinación `test_run_id + parameter_definition_id` es única.
-- Si ambos valores de un par min/max existen, el máximo debe ser mayor o igual al mínimo.
+- Si ambos valores de un par min/max existen y el máximo es menor que el mínimo, se genera warning no bloqueante.
 
 ### LevelingMeasurement
 Medición de nivelación por piso y dirección.
@@ -168,21 +189,24 @@ Medición de nivelación por piso y dirección.
 Campos:
 - `id`
 - `test_run_id`
-- `elevator_id`
-- `floor_label`
-- `floor_number`
-- `origin_floor_label`
-- `destination_floor_label`
+- `origin_floor_id`
+- `destination_floor_id`
 - `travel_type` (`short`, `long`)
 - `direction` (`up`, `down`)
 - `landing_mm` valor inicial al aterrizar. Positivo = cabina alta. Negativo = cabina baja.
 - `final_mm` valor final luego de renivelación. Positivo = cabina alta. Negativo = cabina baja.
-- `relevel_mm` calculado como `final_mm - landing_mm`
-- `within_final_tolerance`
-- `relevel_ok`
-- `hysteresis_ok`
-- `flag_adjustment_recommended`
+- `did_relevel` calculado por backend como `true` solo cuando `final_mm` existe y es distinto de `landing_mm`.
+- `effective_final_mm` calculado como `final_mm` si existe, si no `landing_mm`
+- `is_final_within_tolerance`
 - `notes`
+
+Reglas:
+- `origin_floor_id` y `destination_floor_id` deben pertenecer al mismo elevador del `TestRun`.
+- `origin_floor_id` y `destination_floor_id` deben ser diferentes.
+- `destination_floor_id` debe corresponder a un piso con `is_leveling_required = true`.
+- La combinación `test_run_id + origin_floor_id + destination_floor_id + direction + travel_type` es única.
+- La tolerancia inicial es ±5 mm sobre `effective_final_mm`.
+- La histerisis, renivelación avanzada y recomendación de bandera quedan para slices posteriores.
 
 ### Evidence
 Fotos/videos/documentos asociados a prueba, elevador o medición.

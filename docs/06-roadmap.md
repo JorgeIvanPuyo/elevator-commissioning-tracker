@@ -34,21 +34,22 @@ Codex debe actualizar este archivo al terminar cada tarea:
 
 ## Fase 3 — Pruebas y parámetros
 - [x] Crear TestRun.
+- [x] Crear TestRunProcessStep para procesos A61E-A67E.
 - [x] Crear ParameterDefinition.
 - [x] Crear TestRunParameterValue.
 - [x] Crear seed de parámetros.
 - [ ] Crear endpoint para crear TestRun precargando parámetros desde prueba anterior.
 - [x] Crear validación HEX->decimal.
-- [x] Crear validación min/max.
+- [x] Crear warnings min/max no bloqueantes.
 
 ## Fase 4 — Nivelación
-- [ ] Crear LevelingMeasurement.
-- [ ] Crear endpoint bulk save.
-- [ ] Calcular tolerancia final.
-- [ ] Calcular renivelación.
+- [x] Crear LevelingMeasurement.
+- [x] Crear endpoint bulk save.
+- [x] Calcular tolerancia final.
+- [x] Calcular `did_relevel` automáticamente desde `landing_mm` y `final_mm`.
 - [ ] Calcular histerisis.
 - [ ] Calcular recomendación de bandera.
-- [ ] Crear endpoint resumen por elevador.
+- [x] Crear resumen inicial por TestRun en respuesta de mediciones.
 
 ## Fase 5 — Evidencias
 - [ ] Configurar GCS.
@@ -76,8 +77,9 @@ Codex debe actualizar este archivo al terminar cada tarea:
 
 ## Fase 8 — Nivelación visual
 - [ ] Crear mapa de 62 pisos.
-- [ ] Crear formulario de mediciones.
-- [ ] Crear KPIs por prueba.
+- [x] Crear formulario de mediciones.
+- [x] Separar editor de mediciones en cuatro grupos operativos: corto/subiendo, corto/bajando, largo/subiendo y largo/bajando.
+- [x] Crear resumen inicial por prueba.
 - [ ] Crear comparación prueba actual vs anterior.
 - [ ] Crear indicadores verde/amarillo/rojo.
 
@@ -128,3 +130,29 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - El frontend permite crear/listar pruebas desde el detalle de elevador y editar parámetros desde `/test-runs/{testRunId}`.
 - El editor de parámetros muestra preview decimal, errores HEX inline, errores backend y borrador local en `localStorage`.
 - Siguiente slice recomendado: Fase 4, crear mediciones de nivelación piso a piso (`LevelingMeasurement`) con bulk save y tolerancias mínimas.
+
+## Fix intermedio — formularios, procesos técnicos A61E-A67E y warnings de parámetros
+- [x] Corregir formularios de creación para no llamar `.reset()` sobre referencias nulas después de submits async.
+- [x] Separar A61E, A62E, A65E, A66E y A67E como `TestRunProcessStep`, no como parámetros HEX editables.
+- [x] Remover A61E-A67E del seed/listado de `ParameterDefinition`.
+- [x] Agregar endpoints para listar y actualizar pasos de proceso de una prueba.
+- [x] Cambiar validación min/max para retornar warnings y permitir persistencia.
+- [x] Mostrar checklist de procesos y warnings de parámetros en frontend.
+- Siguiente slice recomendado: continuar con Fase 4 `LevelingMeasurement`.
+
+## Notas de Slice 4
+- Se implementó `LevelingMeasurement` con origen, destino, dirección, tipo de viaje, aterrizaje, final, `did_relevel` calculado y notas.
+- El backend calcula `effective_final_mm` y `is_final_within_tolerance` con tolerancia inicial de ±5 mm.
+- Se agregó bulk upsert transaccional para `/test-runs/{testRunId}/leveling-measurements/bulk`.
+- El backend valida que los pisos usados pertenezcan al mismo elevador del `TestRun`.
+- El frontend incorpora un editor de mediciones en `/test-runs/{testRunId}` con borrador local agrupado por dirección/tipo de viaje.
+- Siguiente slice recomendado: histerisis y KPIs avanzados de nivelación, o evidencia/GCS si se prioriza trazabilidad visual.
+
+## Fix intermedio — UX de mediciones de nivelación piso a piso
+- [x] Reorganizar el editor en cuatro grupos claros: corto/subiendo, corto/bajando, largo/subiendo y largo/bajando.
+- [x] Agregar formulario compacto por grupo con origen, destino, aterrizaje, final y notas.
+- [x] Mostrar tabla/lista por grupo con origen y destino explícitos, sin selector global ambiguo.
+- [x] Calcular `did_relevel` en backend y frontend de vista previa; no se captura manualmente.
+- [x] Validar que origen y destino sean distintos y que el destino requiera nivelación.
+- [x] Mantener bulk save transaccional, borrador local y resumen de tolerancia.
+- Siguiente slice recomendado: Slice 5, histerisis y KPIs iniciales de nivelación.

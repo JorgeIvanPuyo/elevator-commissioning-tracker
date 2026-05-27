@@ -62,21 +62,28 @@ Cada campo HEX debe mostrar:
 - Input HEX editable.
 - Conversión decimal al lado: `(96)`.
 - Indicador de cambio vs prueba anterior.
-- Warning si el valor viola min/max.
+- Warning si el valor viola min/max, sin bloquear guardado.
 
 Ejemplo:
 `273 = 60 (96)`
 
+## Procesos técnicos
+Los códigos A61E, A62E, A65E, A66E y A67E deben mostrarse como checklist de procesos ejecutados dentro de una prueba.
+No deben aparecer en el editor de parámetros HEX.
+
 ## Nivelación
-Cada fila debe incluir:
-- Piso origen.
-- Piso destino.
-- Dirección.
-- Tipo de viaje.
-- Aterrizaje mm.
-- Final mm.
-- Estado.
-- Notas.
+El editor de mediciones debe separar el trabajo de campo en cuatro grupos:
+- Corto / Subiendo.
+- Corto / Bajando.
+- Largo / Subiendo.
+- Largo / Bajando.
+
+Cada grupo debe tener un formulario compacto para agregar mediciones con piso origen, piso destino, aterrizaje mm, final mm y notas. La tabla/lista de cada grupo debe mostrar origen, destino, aterrizaje, final, si reniveló, tolerancia ±5 mm, notas y acciones.
+
+`did_relevel` no es editable: se muestra como Sí/No calculado desde `landing_mm` y `final_mm`.
+
+El editor guarda borradores por:
+`elevator-commissioning:test-run:{testRunId}:leveling-groups-draft`.
 
 ## Autosave
 Mientras el usuario edita una prueba:

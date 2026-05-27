@@ -37,10 +37,11 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
 
   async function handleCreateElevator(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setIsSaving(true);
     setError(null);
 
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const floorCount = Number(form.get("floor_count") || 0);
 
     try {
@@ -51,7 +52,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
         controller_model: String(form.get("controller_model") || ""),
         machine_room: String(form.get("machine_room") || ""),
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await loadProject();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "No se pudo crear el elevador");

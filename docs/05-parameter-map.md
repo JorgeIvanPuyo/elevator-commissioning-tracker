@@ -1,6 +1,6 @@
 # Parameter Map
 
-## Load Test Parameters
+## Load Test Process Steps
 | Code | Purpose |
 |---|---|
 | A61E | Configura 0% de carga |
@@ -63,4 +63,6 @@
 ## Storage Rules
 - `hex_value` se guarda en mayúsculas y sin prefijo `0x`.
 - `decimal_value` se calcula en backend.
-- Los pares min/max se validan con `bound_type` y `pair_code` desde `parameter_definitions`.
+- Los pares min/max se evalúan con `bound_type` y `pair_code` desde `parameter_definitions`.
+- Si MAX < MIN, se guarda el valor y se retorna warning.
+- A61E, A62E, A65E, A66E y A67E viven en `test_run_process_steps`, no en `parameter_definitions`.

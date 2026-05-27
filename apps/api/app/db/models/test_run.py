@@ -42,3 +42,5 @@ class TestRun(Base):
     elevator = relationship("Elevator", back_populates="test_runs")
     test_type = relationship("TestType", back_populates="test_runs")
     parameter_values = relationship("TestRunParameterValue", back_populates="test_run", cascade="all, delete-orphan")
+    process_steps = relationship("TestRunProcessStep", back_populates="test_run", cascade="all, delete-orphan")
+    leveling_measurements = relationship("LevelingMeasurement", back_populates="test_run", cascade="all, delete-orphan")
