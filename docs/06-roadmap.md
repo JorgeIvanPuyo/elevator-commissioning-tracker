@@ -47,7 +47,7 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - [x] Crear endpoint bulk save.
 - [x] Calcular tolerancia final.
 - [x] Calcular `did_relevel` automáticamente desde `landing_mm` y `final_mm`.
-- [ ] Calcular histerisis.
+- [x] Calcular histerisis.
 - [ ] Calcular recomendación de bandera.
 - [x] Crear resumen inicial por TestRun en respuesta de mediciones.
 
@@ -80,6 +80,7 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - [x] Crear formulario de mediciones.
 - [x] Separar editor de mediciones en cuatro grupos operativos: corto/subiendo, corto/bajando, largo/subiendo y largo/bajando.
 - [x] Crear resumen inicial por prueba.
+- [x] Mostrar KPIs avanzados y resumen por piso en detalle de prueba.
 - [ ] Crear comparación prueba actual vs anterior.
 - [ ] Crear indicadores verde/amarillo/rojo.
 
@@ -156,3 +157,12 @@ Codex debe actualizar este archivo al terminar cada tarea:
 - [x] Validar que origen y destino sean distintos y que el destino requiera nivelación.
 - [x] Mantener bulk save transaccional, borrador local y resumen de tolerancia.
 - Siguiente slice recomendado: Slice 5, histerisis y KPIs iniciales de nivelación.
+
+## Notas de Slice 5
+- Se agregó `GET /api/v1/test-runs/{testRunId}/leveling-summary`.
+- El backend calcula cobertura de pisos requeridos, tolerancia final, renivelación aceptable, histerisis inicial y estados por piso.
+- La histerisis compara subida vs bajada por tipo de viaje y corto vs largo por dirección cuando hay datos suficientes.
+- El endpoint es read-only y no modifica mediciones existentes.
+- El frontend muestra cards KPI, estado general y tabla por piso en `/test-runs/{testRunId}`.
+- El resumen se refresca después de guardar o eliminar mediciones desde el editor.
+- Siguiente slice recomendado: comparación entre iteraciones de `TestRun` para ver si una prueba mejoró o empeoró.

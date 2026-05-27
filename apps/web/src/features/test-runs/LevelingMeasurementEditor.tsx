@@ -81,7 +81,7 @@ function emptyMeasurementForm(): MeasurementForm {
   };
 }
 
-export function LevelingMeasurementEditor({ testRun }: { testRun: TestRun }) {
+export function LevelingMeasurementEditor({ testRun, onMeasurementsChanged }: { testRun: TestRun; onMeasurementsChanged?: () => void | Promise<void> }) {
   const [floors, setFloors] = useState<ElevatorFloor[]>([]);
   const [draftGroups, setDraftGroups] = useState<DraftGroups>(emptyDraftGroups);
   const [formByGroup, setFormByGroup] = useState<FormsByGroup>(emptyFormsByGroup);
@@ -205,6 +205,7 @@ export function LevelingMeasurementEditor({ testRun }: { testRun: TestRun }) {
         [groupKey]: draftGroups[groupKey].filter((item) => item.local_id !== row.local_id),
       };
       persistDraft(nextDraft);
+      await onMeasurementsChanged?.();
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar la medición");
     } finally {
@@ -236,6 +237,7 @@ export function LevelingMeasurementEditor({ testRun }: { testRun: TestRun }) {
       window.localStorage.removeItem(draftKey);
       setHasLocalDraft(false);
       setSuccessMessage("Mediciones guardadas");
+      await onMeasurementsChanged?.();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "No se pudieron guardar mediciones");
     } finally {

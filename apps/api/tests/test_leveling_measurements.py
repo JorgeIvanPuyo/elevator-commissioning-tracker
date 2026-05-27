@@ -289,3 +289,135 @@ async def test_did_relevel_false_when_final_is_null(client) -> None:
     assert item["did_relevel"] is False
     assert item["renivelation_occurred"] is False
     assert item["effective_final_mm"] == -9
+
+
+async def test_leveling_summary_empty_without_measurements(client) -> None:
+    elevator, _, test_run = await create_measurement_test_run(client)
+
+    response = await client.get(f"/api/v1/test-runs/{test_run['id']}/leveling-summary")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["test_run_id"] == test_run["id"]
+    assert body["elevator_id"] == elevator["id"]
+    assert body["measurement_count"] == 0
+    assert body["required_floor_count"] == 4
+    assert body["measured_required_floor_count"] == 0
+    assert body["coverage_percentage"] == 0.0
+    assert body["overall_status"] == "pending"
+    assert all(floor["status"] == "pending" for floor in body["floor_summaries"])
+
+
+async def test_leveling_summary_calculates_required_floor_coverage(client) -> None:
+    _, floors, test_run = await create_measurement_test_run(client)
+    update = await client.patch(f"/api/v1/elevator-floors/{floors[3]['id']}", json={"is_served": False, "is_leveling_required": False})
+    assert update.status_code == 200
+    await client.put(
+        f"/api/v1/test-runs/{test_run['id']}/leveling-measurements/bulk",
+        json={"items": [measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=2)]},
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{test_run['id']}/leveling-summary")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["required_floor_count"] == 3
+    assert body["measured_required_floor_count"] == 1
+    assert body["coverage_percentage"] == 33.33
+    assert body["floor_summaries"][3]["status"] == "not_required"
+
+
+async def test_leveling_summary_calculates_final_tolerance_percentages(client) -> None:
+    _, floors, test_run = await create_measurement_test_run(client)
+    await client.put(
+        f"/api/v1/test-runs/{test_run['id']}/leveling-measurements/bulk",
+        json={
+            "items": [
+                measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=4),
+                measurement_payload(floors[1]["id"], floors[2]["id"], final_mm=8),
+            ]
+        },
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{test_run['id']}/leveling-summary")
+
+    body = response.json()
+    assert body["measurement_count"] == 2
+    assert body["within_final_tolerance_count"] == 1
+    assert body["out_of_final_tolerance_count"] == 1
+    assert body["within_final_tolerance_percentage"] == 50.0
+    assert body["floor_summaries"][2]["has_out_of_tolerance_measurement"] is True
+
+
+async def test_leveling_summary_detects_renivelation_and_acceptability(client) -> None:
+    _, floors, test_run = await create_measurement_test_run(client)
+    await client.put(
+        f"/api/v1/test-runs/{test_run['id']}/leveling-measurements/bulk",
+        json={
+            "items": [
+                measurement_payload(floors[0]["id"], floors[1]["id"], landing_mm=10, final_mm=2),
+                measurement_payload(floors[1]["id"], floors[2]["id"], landing_mm=20, final_mm=3),
+            ]
+        },
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{test_run['id']}/leveling-summary")
+
+    body = response.json()
+    assert body["renivelation_count"] == 2
+    assert body["acceptable_renivelation_count"] == 1
+    assert body["acceptable_renivelation_percentage"] == 50.0
+    assert body["floor_summaries"][1]["renivelation_ok"] is True
+    assert body["floor_summaries"][2]["renivelation_ok"] is False
+
+
+async def test_leveling_summary_calculates_short_and_long_hysteresis(client) -> None:
+    _, floors, test_run = await create_measurement_test_run(client)
+    await client.put(
+        f"/api/v1/test-runs/{test_run['id']}/leveling-measurements/bulk",
+        json={
+            "items": [
+                measurement_payload(floors[0]["id"], floors[1]["id"], travel_type="short", direction="up", final_mm=4),
+                measurement_payload(floors[2]["id"], floors[1]["id"], travel_type="short", direction="down", final_mm=-1),
+                measurement_payload(floors[0]["id"], floors[2]["id"], travel_type="long", direction="up", final_mm=8),
+                measurement_payload(floors[3]["id"], floors[2]["id"], travel_type="long", direction="down", final_mm=-3),
+            ]
+        },
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{test_run['id']}/leveling-summary")
+
+    body = response.json()
+    floor_2 = body["floor_summaries"][1]
+    floor_3 = body["floor_summaries"][2]
+    assert floor_2["hysteresis"]["short_up_vs_down_mm"] == 5
+    assert floor_2["hysteresis"]["short_up_vs_down_ok"] is True
+    assert floor_3["hysteresis"]["long_up_vs_down_mm"] == 11
+    assert floor_3["hysteresis"]["long_up_vs_down_ok"] is False
+    assert body["hysteresis_pairs_count"] == 2
+    assert body["hysteresis_ok_count"] == 1
+    assert body["hysteresis_ok_percentage"] == 50.0
+
+
+async def test_leveling_summary_statuses_pending_ok_warning_and_critical(client) -> None:
+    _, floors, test_run = await create_measurement_test_run(client)
+    await client.put(
+        f"/api/v1/test-runs/{test_run['id']}/leveling-measurements/bulk",
+        json={
+            "items": [
+                measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=2),
+                measurement_payload(floors[1]["id"], floors[2]["id"], final_mm=7),
+                measurement_payload(floors[2]["id"], floors[3]["id"], final_mm=12),
+            ]
+        },
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{test_run['id']}/leveling-summary")
+
+    body = response.json()
+    statuses = {floor["floor_label"]: floor["status"] for floor in body["floor_summaries"]}
+    assert statuses["1"] == "pending"
+    assert statuses["2"] == "ok"
+    assert statuses["3"] == "warning"
+    assert statuses["4"] == "critical"
+    assert body["overall_status"] == "critical"

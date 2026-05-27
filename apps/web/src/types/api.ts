@@ -218,3 +218,61 @@ export type LevelingMeasurementBulkResponse = {
   items: LevelingMeasurement[];
   summary: LevelingMeasurementSummary;
 };
+
+export type LevelingStatus = "pending" | "ok" | "warning" | "critical" | "not_required";
+
+export type LevelingFinalValues = {
+  short_up: number | null;
+  short_down: number | null;
+  long_up: number | null;
+  long_down: number | null;
+};
+
+export type LevelingHysteresisSummary = {
+  short_up_vs_down_mm: number | null;
+  short_up_vs_down_ok: boolean | null;
+  long_up_vs_down_mm: number | null;
+  long_up_vs_down_ok: boolean | null;
+  short_vs_long_up_mm: number | null;
+  short_vs_long_up_ok: boolean | null;
+  short_vs_long_down_mm: number | null;
+  short_vs_long_down_ok: boolean | null;
+  max_difference_mm: number | null;
+  overall_ok: boolean | null;
+};
+
+export type LevelingFloorSummary = {
+  floor_id: string;
+  floor_label: string;
+  sort_order: number;
+  is_served: boolean;
+  is_leveling_required: boolean;
+  measurements_count: number;
+  final_values_mm: LevelingFinalValues;
+  within_final_tolerance: boolean | null;
+  has_out_of_tolerance_measurement: boolean;
+  has_renivelation: boolean;
+  renivelation_ok: boolean | null;
+  hysteresis: LevelingHysteresisSummary;
+  status: LevelingStatus;
+};
+
+export type LevelingSummary = {
+  test_run_id: string;
+  elevator_id: string;
+  measurement_count: number;
+  required_floor_count: number;
+  measured_required_floor_count: number;
+  coverage_percentage: number;
+  within_final_tolerance_count: number;
+  within_final_tolerance_percentage: number;
+  out_of_final_tolerance_count: number;
+  renivelation_count: number;
+  acceptable_renivelation_count: number;
+  acceptable_renivelation_percentage: number;
+  hysteresis_pairs_count: number;
+  hysteresis_ok_count: number;
+  hysteresis_ok_percentage: number;
+  overall_status: LevelingStatus;
+  floor_summaries: LevelingFloorSummary[];
+};

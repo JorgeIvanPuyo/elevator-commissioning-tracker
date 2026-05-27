@@ -93,9 +93,10 @@ Base:
 - `GET /test-runs/{test_run_id}/leveling-measurements`
 - `PUT /test-runs/{test_run_id}/leveling-measurements/bulk`
 - `DELETE /leveling-measurements/{measurement_id}`
-- `GET /elevators/{elevator_id}/leveling-summary`
+- `GET /test-runs/{test_run_id}/leveling-summary`
 
 El bulk de mediciones calcula en backend `effective_final_mm`, `is_final_within_tolerance` y `did_relevel`. El payload no debe depender de una bandera manual de renivelación.
+El resumen de nivelación es read-only y retorna KPIs agregados, estados y detalle por piso.
 
 ### Evidence
 - `POST /test-runs/{test_run_id}/evidence`

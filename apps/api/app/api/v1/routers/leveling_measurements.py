@@ -7,7 +7,9 @@ from app.api.v1.dependencies import to_http_exception
 from app.core.exceptions import AppError
 from app.db.session import get_db_session
 from app.schemas.leveling_measurement import LevelingMeasurementBulkRequest, LevelingMeasurementBulkResponse
+from app.schemas.leveling_summary import LevelingSummaryRead
 from app.services import leveling_measurements as leveling_measurement_service
+from app.services import leveling_summary as leveling_summary_service
 
 router = APIRouter(tags=["leveling-measurements"])
 
@@ -42,6 +44,17 @@ async def bulk_upsert_leveling_measurements(
 ) -> LevelingMeasurementBulkResponse:
     try:
         return await leveling_measurement_service.bulk_upsert_leveling_measurements(session, test_run_id, payload)
+    except AppError as error:
+        raise to_http_exception(error) from error
+
+
+@router.get("/test-runs/{test_run_id}/leveling-summary", response_model=LevelingSummaryRead)
+async def get_leveling_summary(
+    test_run_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+) -> LevelingSummaryRead:
+    try:
+        return await leveling_summary_service.get_leveling_summary(session, test_run_id)
     except AppError as error:
         raise to_http_exception(error) from error
 

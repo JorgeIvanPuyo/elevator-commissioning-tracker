@@ -206,7 +206,30 @@ Reglas:
 - `destination_floor_id` debe corresponder a un piso con `is_leveling_required = true`.
 - La combinación `test_run_id + origin_floor_id + destination_floor_id + direction + travel_type` es única.
 - La tolerancia inicial es ±5 mm sobre `effective_final_mm`.
-- La histerisis, renivelación avanzada y recomendación de bandera quedan para slices posteriores.
+- El resumen técnico por `TestRun` calcula cobertura, tolerancia final, renivelación aceptable e histerisis inicial por piso.
+- La recomendación de bandera queda para slices posteriores.
+
+### LevelingSummary
+Resumen calculado y read-only de nivelación para una prueba.
+
+Campos principales:
+- `test_run_id`
+- `elevator_id`
+- `measurement_count`
+- `required_floor_count`
+- `measured_required_floor_count`
+- `coverage_percentage`
+- `within_final_tolerance_percentage`
+- `acceptable_renivelation_percentage`
+- `hysteresis_ok_percentage`
+- `overall_status` (`pending`, `ok`, `warning`, `critical`, `not_required`)
+- `floor_summaries`
+
+Reglas:
+- Solo cuenta pisos con `is_served = true` e `is_leveling_required = true` para cobertura.
+- Las mediciones sin `landing_mm` ni `final_mm` no afectan KPIs.
+- Para valores repetidos de un mismo piso/escenario, se usa la medición más reciente.
+- La histerisis inicial compara subida vs bajada por tipo de viaje y corto vs largo dentro de la misma dirección cuando existen datos.
 
 ### Evidence
 Fotos/videos/documentos asociados a prueba, elevador o medición.

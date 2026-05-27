@@ -6,6 +6,7 @@ import type {
   LevelingDirection,
   LevelingMeasurementBulkItem,
   LevelingMeasurementBulkResponse,
+  LevelingSummary,
   LevelingTravelType,
   ParameterDefinition,
   Project,
@@ -100,4 +101,5 @@ export const api = {
       body: { items },
     }),
   deleteLevelingMeasurement: (measurementId: string) => request<void>(`/api/v1/leveling-measurements/${measurementId}`, { method: "DELETE" }),
+  getLevelingSummary: (testRunId: string) => request<LevelingSummary>(`/api/v1/test-runs/${testRunId}/leveling-summary`),
 };

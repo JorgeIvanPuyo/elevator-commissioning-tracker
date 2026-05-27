@@ -85,6 +85,12 @@ Cada grupo debe tener un formulario compacto para agregar mediciones con piso or
 El editor guarda borradores por:
 `elevator-commissioning:test-run:{testRunId}:leveling-groups-draft`.
 
+El detalle de prueba debe mostrar un resumen técnico de nivelación con:
+- Cards compactas de mediciones, cobertura, tolerancia final, renivelación, histerisis y estado general.
+- Tabla por piso con valores finales por escenario, histerisis máxima y estado.
+- Estados vacíos cuando todavía no hay mediciones o pares suficientes para histerisis.
+- Actualización del resumen después de guardar mediciones.
+
 ## Autosave
 Mientras el usuario edita una prueba:
 - Guardar borrador local por `elevator_id + test_type_id + draft_id`.

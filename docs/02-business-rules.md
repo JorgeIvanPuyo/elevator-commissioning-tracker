@@ -74,6 +74,15 @@ Los KPIs avanzados de renivelación quedan diferidos.
 ### Histerisis aceptable
 La histerisis es aceptable si la diferencia absoluta entre resultado final subiendo y bajando para el mismo piso y tipo de viaje es menor o igual a 5 mm.
 
+En el resumen inicial también se compara corto vs largo dentro de la misma dirección si existen ambos datos.
+
+### Estados de resumen de nivelación
+- `not_required`: piso que no requiere nivelación o no es servido.
+- `pending`: piso requerido sin mediciones con valor.
+- `ok`: mediciones dentro de tolerancia y sin histerisis incorrecta.
+- `warning`: medición fuera de ±5 mm, renivelación no aceptable o histerisis incorrecta.
+- `critical`: algún valor final efectivo con desviación absoluta mayor a 10 mm.
+
 ### Recomendación de mover bandera
 Si:
 - Histerisis <= 5 mm, pero

@@ -7,8 +7,10 @@ import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api";
 import { fromDatetimeLocalValue, previewHexDecimal, toDatetimeLocalValue } from "@/lib/hex";
 import { LevelingMeasurementEditor } from "@/features/test-runs/LevelingMeasurementEditor";
+import { LevelingSummaryPanel } from "@/features/test-runs/LevelingSummaryPanel";
 import type {
   Elevator,
+  LevelingSummary,
   ParameterDefinition,
   ParameterValidationWarning,
   TestRun,
@@ -41,6 +43,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
   const [definitions, setDefinitions] = useState<ParameterDefinition[]>([]);
   const [savedValues, setSavedValues] = useState<TestRunParameterValue[]>([]);
   const [processSteps, setProcessSteps] = useState<TestRunProcessStep[]>([]);
+  const [levelingSummary, setLevelingSummary] = useState<LevelingSummary | null>(null);
   const [parameterWarnings, setParameterWarnings] = useState<ParameterValidationWarning[]>([]);
   const [draft, setDraft] = useState<DraftByCode>({});
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
@@ -57,12 +60,13 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
     setIsLoading(true);
     setError(null);
     try {
-      const [runResponse, definitionResponse, parameterResponse, typeResponse, processStepResponse] = await Promise.all([
+      const [runResponse, definitionResponse, parameterResponse, typeResponse, processStepResponse, levelingSummaryResponse] = await Promise.all([
         api.getTestRun(testRunId),
         api.listParameterDefinitions(),
         api.listTestRunParameters(testRunId),
         api.listTestTypes(),
         api.listTestRunProcessSteps(testRunId),
+        api.getLevelingSummary(testRunId),
       ]);
       const elevatorResponse = await api.getElevator(runResponse.elevator_id);
       setTestRun(runResponse);
@@ -71,6 +75,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
       setSavedValues(parameterResponse.values);
       setParameterWarnings(parameterResponse.validation_warnings);
       setProcessSteps(processStepResponse);
+      setLevelingSummary(levelingSummaryResponse);
       setTestTypes(typeResponse);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No se pudo cargar la prueba");
@@ -82,6 +87,14 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
   useEffect(() => {
     void loadTestRun();
   }, [testRunId]);
+
+  async function refreshLevelingSummary() {
+    try {
+      setLevelingSummary(await api.getLevelingSummary(testRunId));
+    } catch (summaryError) {
+      setError(summaryError instanceof Error ? summaryError.message : "No se pudo actualizar el resumen de nivelación");
+    }
+  }
 
   useEffect(() => {
     if (definitions.length === 0) {
@@ -372,7 +385,9 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
             </div>
           </div>
 
-          <LevelingMeasurementEditor testRun={testRun} />
+          <LevelingSummaryPanel summary={levelingSummary} />
+
+          <LevelingMeasurementEditor onMeasurementsChanged={refreshLevelingSummary} testRun={testRun} />
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link className="inline-flex border border-field-line bg-white px-4 py-3 text-sm font-semibold" href={`/elevators/${testRun.elevator_id}`}>
