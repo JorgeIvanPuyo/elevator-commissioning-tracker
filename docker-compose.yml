@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      ENVIRONMENT: local
+      APP_NAME: Megapolis Elevator Traceability
+      DATABASE_URL: postgresql+asyncpg://megapolis:megapolis@postgres:5432/megapolis
+      CORS_ORIGINS: http://localhost:3000
+      GCS_BUCKET_NAME: ""
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: megapolis
+      POSTGRES_USER: megapolis
+      POSTGRES_PASSWORD: megapolis
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
