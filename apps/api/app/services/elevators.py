@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
-from app.db.models import Elevator, ElevatorFloor
+from app.db.models import Elevator, ElevatorFloor, Project
 from app.schemas.elevator import ElevatorCreate, ElevatorUpdate
 from app.services.projects import get_project
 
@@ -45,6 +45,40 @@ async def list_project_elevators(session: AsyncSession, project_id: UUID, limit:
         .offset(offset)
     )
     return list(result)
+
+
+async def list_elevators(
+    session: AsyncSession,
+    limit: int,
+    offset: int,
+    project_id: UUID | None = None,
+    status: str | None = None,
+    search: str | None = None,
+) -> list[dict]:
+    query = select(Elevator, Project).join(Project, Elevator.project_id == Project.id).order_by(Project.name.asc(), Elevator.code.asc())
+    if project_id is not None:
+        query = query.where(Elevator.project_id == project_id)
+    if status is not None:
+        query = query.where(Elevator.status == status)
+    if search:
+        pattern = f"%{search.strip()}%"
+        query = query.where(or_(Elevator.code.ilike(pattern), Elevator.name.ilike(pattern), Project.name.ilike(pattern)))
+
+    rows = (await session.execute(query.limit(limit).offset(offset))).all()
+    return [
+        {
+            "id": elevator.id,
+            "code": elevator.code,
+            "name": elevator.name,
+            "status": elevator.status,
+            "floor_count": elevator.floor_count,
+            "project_id": project.id,
+            "project_name": project.name,
+            "created_at": elevator.created_at,
+            "updated_at": elevator.updated_at,
+        }
+        for elevator, project in rows
+    ]
 
 
 async def get_elevator(session: AsyncSession, elevator_id: UUID) -> Elevator:

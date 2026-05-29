@@ -45,6 +45,26 @@ La app se usa en campo, con presión, ruido, señal inestable y necesidad de rap
 - Documentación
 - Reportes
 
+## Dashboard operacional de elevador
+El detalle de elevador es el centro de trabajo de campo.
+
+Debe mostrar en la primera vista:
+- Proyecto, elevador, estado y responsable/workflow si existe.
+- Progreso del workflow guiado.
+- Pasos requeridos pendientes.
+- Bloqueos críticos de carga/pesacargas.
+- Última prueba técnica.
+- Resumen compacto de nivelación.
+- Warnings/resumen de parámetros críticos.
+- Acciones rápidas para crear TestRun, abrir última prueba, editar pisos y consultar documentación.
+
+La vista debe ser compacta y técnica:
+- Workflow como lista de pasos numerados.
+- Badges para requerido/opcional, bloqueante y estado.
+- Acciones simples por paso: iniciar, completar, no aplica y bloquear.
+- Notas por paso guardadas directamente en backend.
+- Paneles laterales para parámetros críticos, zonas, resumen de nivelación y acciones rápidas.
+
 ## Visualización 62 pisos
 Crear componente `ElevatorShaftMap`.
 Debe mostrar:
@@ -90,6 +110,13 @@ El detalle de prueba debe mostrar un resumen técnico de nivelación con:
 - Tabla por piso con valores finales por escenario, histerisis máxima y estado.
 - Estados vacíos cuando todavía no hay mediciones o pares suficientes para histerisis.
 - Actualización del resumen después de guardar mediciones.
+
+El detalle de prueba debe permitir comparar la prueba actual contra otra iteración del mismo elevador:
+- Selector de baseline con candidatos disponibles.
+- Cards comparativas para cobertura, tolerancia final, renivelación, histerisis y pisos críticos.
+- Tabla por piso con estado anterior, estado actual, final anterior, final actual, delta y resultado.
+- Tabla de parámetros modificados, con opción simple para mostrar todos.
+- Estados claros cuando no hay candidatos, está cargando o no hay datos comparables.
 
 ## Autosave
 Mientras el usuario edita una prueba:

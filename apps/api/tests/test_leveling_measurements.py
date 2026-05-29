@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from test_core_crud import create_project
 from test_test_runs_and_parameters import create_test_run, get_test_type
 
@@ -19,6 +21,16 @@ async def create_measurement_test_run(client, code: str = "L9") -> tuple[dict, l
         )
     ).json()
     return elevator, floors, test_run
+
+
+async def create_test_run_for_elevator(client, elevator_id: str, title: str) -> dict:
+    test_type = await get_test_type(client, "FINE_LEVELING")
+    return (
+        await client.post(
+            f"/api/v1/elevators/{elevator_id}/test-runs",
+            json={"test_type_id": test_type["id"], "technician_name": "Tech", "status": "completed", "title": title},
+        )
+    ).json()
 
 
 def measurement_payload(origin_floor_id: str, destination_floor_id: str, **overrides) -> dict:
@@ -421,3 +433,136 @@ async def test_leveling_summary_statuses_pending_ok_warning_and_critical(client)
     assert statuses["3"] == "warning"
     assert statuses["4"] == "critical"
     assert body["overall_status"] == "critical"
+
+
+async def test_comparison_rejects_test_runs_from_different_elevators(client) -> None:
+    elevator_a, _, current = await create_measurement_test_run(client, code="L9")
+    elevator_b, _ = await create_elevator_with_floors(client, code="L10")
+    baseline = await create_test_run_for_elevator(client, elevator_b["id"], "Baseline")
+
+    response = await client.get(f"/api/v1/test-runs/{current['id']}/comparison?baseline_test_run_id={baseline['id']}")
+
+    assert elevator_a["id"] != elevator_b["id"]
+    assert response.status_code == 400
+    assert "same elevator" in response.json()["detail"]
+
+
+async def test_comparison_returns_404_when_baseline_does_not_exist(client) -> None:
+    _, _, current = await create_measurement_test_run(client)
+
+    response = await client.get(f"/api/v1/test-runs/{current['id']}/comparison?baseline_test_run_id={uuid4()}")
+
+    assert response.status_code == 404
+
+
+async def test_comparison_candidates_exclude_current_test_run(client) -> None:
+    elevator, _, current = await create_measurement_test_run(client)
+    baseline = await create_test_run_for_elevator(client, elevator["id"], "Baseline")
+
+    response = await client.get(f"/api/v1/test-runs/{current['id']}/comparison-candidates")
+
+    assert response.status_code == 200
+    ids = [item["id"] for item in response.json()]
+    assert baseline["id"] in ids
+    assert current["id"] not in ids
+    assert response.json()[0]["within_final_tolerance_percentage"] == 0.0
+
+
+async def test_comparison_calculates_global_kpis_and_improvement(client) -> None:
+    elevator, floors, baseline = await create_measurement_test_run(client)
+    current = await create_test_run_for_elevator(client, elevator["id"], "Current")
+    await client.put(
+        f"/api/v1/test-runs/{baseline['id']}/leveling-measurements/bulk",
+        json={
+            "items": [
+                measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=8),
+                measurement_payload(floors[1]["id"], floors[2]["id"], final_mm=2),
+            ]
+        },
+    )
+    await client.put(
+        f"/api/v1/test-runs/{current['id']}/leveling-measurements/bulk",
+        json={
+            "items": [
+                measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=3),
+                measurement_payload(floors[1]["id"], floors[2]["id"], final_mm=2),
+                measurement_payload(floors[2]["id"], floors[3]["id"], final_mm=1),
+            ]
+        },
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{current['id']}/comparison?baseline_test_run_id={baseline['id']}")
+
+    assert response.status_code == 200
+    metrics = {item["metric"]: item for item in response.json()["global_metrics"]}
+    assert metrics["coverage_percent"]["baseline_value"] == 50.0
+    assert metrics["coverage_percent"]["current_value"] == 75.0
+    assert metrics["coverage_percent"]["trend"] == "improved"
+    assert metrics["final_tolerance_percent"]["baseline_value"] == 50.0
+    assert metrics["final_tolerance_percent"]["current_value"] == 100.0
+    assert metrics["final_tolerance_percent"]["trend"] == "improved"
+
+
+async def test_comparison_detects_worsened_final_tolerance(client) -> None:
+    elevator, floors, baseline = await create_measurement_test_run(client)
+    current = await create_test_run_for_elevator(client, elevator["id"], "Current")
+    await client.put(
+        f"/api/v1/test-runs/{baseline['id']}/leveling-measurements/bulk",
+        json={"items": [measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=2)]},
+    )
+    await client.put(
+        f"/api/v1/test-runs/{current['id']}/leveling-measurements/bulk",
+        json={"items": [measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=9)]},
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{current['id']}/comparison?baseline_test_run_id={baseline['id']}")
+
+    metrics = {item["metric"]: item for item in response.json()["global_metrics"]}
+    assert metrics["final_tolerance_percent"]["trend"] == "worsened"
+
+
+async def test_comparison_compares_floor_tolerance_and_newly_measured(client) -> None:
+    elevator, floors, baseline = await create_measurement_test_run(client)
+    current = await create_test_run_for_elevator(client, elevator["id"], "Current")
+    await client.put(
+        f"/api/v1/test-runs/{baseline['id']}/leveling-measurements/bulk",
+        json={"items": [measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=8)]},
+    )
+    await client.put(
+        f"/api/v1/test-runs/{current['id']}/leveling-measurements/bulk",
+        json={
+            "items": [
+                measurement_payload(floors[0]["id"], floors[1]["id"], final_mm=3),
+                measurement_payload(floors[1]["id"], floors[2]["id"], final_mm=4),
+            ]
+        },
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{current['id']}/comparison?baseline_test_run_id={baseline['id']}")
+
+    floors_by_label = {item["floor_label"]: item for item in response.json()["floor_comparisons"]}
+    assert floors_by_label["2"]["baseline_status"] == "warning"
+    assert floors_by_label["2"]["current_status"] == "ok"
+    assert floors_by_label["2"]["trend"] == "improved"
+    assert floors_by_label["3"]["trend"] == "newly_measured"
+
+
+async def test_comparison_compares_modified_parameters_and_decimal_delta(client) -> None:
+    elevator, _, baseline = await create_measurement_test_run(client)
+    current = await create_test_run_for_elevator(client, elevator["id"], "Current")
+    await client.put(
+        f"/api/v1/test-runs/{baseline['id']}/parameters",
+        json={"values": [{"parameter_code": "026D", "hex_value": "40"}]},
+    )
+    await client.put(
+        f"/api/v1/test-runs/{current['id']}/parameters",
+        json={"values": [{"parameter_code": "026D", "hex_value": "45"}]},
+    )
+
+    response = await client.get(f"/api/v1/test-runs/{current['id']}/comparison?baseline_test_run_id={baseline['id']}")
+
+    parameters = {item["parameter_code"]: item for item in response.json()["parameter_comparisons"]}
+    assert parameters["026D"]["baseline_decimal_value"] == 64
+    assert parameters["026D"]["current_decimal_value"] == 69
+    assert parameters["026D"]["decimal_delta"] == 5
+    assert parameters["026D"]["changed"] is True

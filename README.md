@@ -14,6 +14,7 @@ Monorepo for elevator load testing and fine leveling traceability.
 - Process checklist per test run for A61E, A62E, A65E, A66E and A67E.
 - Parameter definitions seeded for load, leveling and compensation workflows.
 - HEX parameter capture with backend decimal conversion and non-blocking min/max warnings.
+- Dashboard overview, global elevator/test-run lists and static Markdown technical docs.
 
 ## Local Development
 

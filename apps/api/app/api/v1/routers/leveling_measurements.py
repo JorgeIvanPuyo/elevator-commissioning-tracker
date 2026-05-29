@@ -8,8 +8,10 @@ from app.core.exceptions import AppError
 from app.db.session import get_db_session
 from app.schemas.leveling_measurement import LevelingMeasurementBulkRequest, LevelingMeasurementBulkResponse
 from app.schemas.leveling_summary import LevelingSummaryRead
+from app.schemas.zone_leveling import ZoneLevelingAnalysisRead
 from app.services import leveling_measurements as leveling_measurement_service
 from app.services import leveling_summary as leveling_summary_service
+from app.services import zone_leveling as zone_leveling_service
 
 router = APIRouter(tags=["leveling-measurements"])
 
@@ -55,6 +57,17 @@ async def get_leveling_summary(
 ) -> LevelingSummaryRead:
     try:
         return await leveling_summary_service.get_leveling_summary(session, test_run_id)
+    except AppError as error:
+        raise to_http_exception(error) from error
+
+
+@router.get("/test-runs/{test_run_id}/zone-leveling-analysis", response_model=ZoneLevelingAnalysisRead)
+async def get_zone_leveling_analysis(
+    test_run_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+) -> ZoneLevelingAnalysisRead:
+    try:
+        return await zone_leveling_service.get_zone_leveling_analysis(session, test_run_id)
     except AppError as error:
         raise to_http_exception(error) from error
 

@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppError, NotFoundError
-from app.db.models import TestRun, TestType
+from app.db.models import Elevator, Project, TestRun, TestType
 from app.schemas.test_run import TestRunCreate, TestRunUpdate
 from app.services.elevators import get_elevator
 from app.services.process_steps import create_default_process_steps
@@ -48,6 +48,57 @@ async def list_elevator_test_runs(
 
     rows = (await session.execute(query)).all()
     return [_serialize_test_run(test_run, test_type) for test_run, test_type in rows]
+
+
+async def list_test_runs(
+    session: AsyncSession,
+    limit: int,
+    offset: int,
+    project_id: UUID | None = None,
+    elevator_id: UUID | None = None,
+    test_type_id: UUID | None = None,
+    test_type_code: str | None = None,
+    status: str | None = None,
+    responsible_technician: str | None = None,
+    search: str | None = None,
+) -> list[dict]:
+    query = (
+        select(TestRun, TestType, Elevator, Project)
+        .join(TestType, TestRun.test_type_id == TestType.id)
+        .join(Elevator, TestRun.elevator_id == Elevator.id)
+        .join(Project, Elevator.project_id == Project.id)
+        .order_by(TestRun.created_at.desc())
+    )
+    if project_id is not None:
+        query = query.where(Project.id == project_id)
+    if elevator_id is not None:
+        query = query.where(Elevator.id == elevator_id)
+    if test_type_id is not None:
+        query = query.where(TestType.id == test_type_id)
+    if test_type_code is not None:
+        query = query.where(TestType.code == test_type_code)
+    if status is not None:
+        _validate_status(status)
+        query = query.where(TestRun.status == status)
+    if responsible_technician is not None:
+        query = query.where(TestRun.technician_name.ilike(f"%{responsible_technician.strip()}%"))
+    if search:
+        pattern = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                TestRun.title.ilike(pattern),
+                TestRun.summary.ilike(pattern),
+                TestRun.technician_name.ilike(pattern),
+                TestType.name.ilike(pattern),
+                TestType.code.ilike(pattern),
+                Elevator.code.ilike(pattern),
+                Elevator.name.ilike(pattern),
+                Project.name.ilike(pattern),
+            )
+        )
+
+    rows = (await session.execute(query.limit(limit).offset(offset))).all()
+    return [_serialize_test_run_list_item(test_run, test_type, elevator, project) for test_run, test_type, elevator, project in rows]
 
 
 async def get_test_run(session: AsyncSession, test_run_id: UUID) -> dict:
@@ -115,6 +166,25 @@ def _serialize_test_run(test_run: TestRun, test_type: TestType) -> dict:
         "title": test_run.title,
         "summary": test_run.summary,
         "notes": test_run.notes,
+        "created_at": test_run.created_at,
+        "updated_at": test_run.updated_at,
+    }
+
+
+def _serialize_test_run_list_item(test_run: TestRun, test_type: TestType, elevator: Elevator, project: Project) -> dict:
+    return {
+        "id": test_run.id,
+        "title": test_run.title,
+        "name": test_run.title or test_type.name,
+        "status": test_run.status,
+        "test_type_id": test_type.id,
+        "test_type_code": test_type.code,
+        "test_type_name": test_type.name,
+        "elevator_id": elevator.id,
+        "elevator_code": elevator.code,
+        "project_id": project.id,
+        "project_name": project.name,
+        "responsible_technician": test_run.technician_name,
         "created_at": test_run.created_at,
         "updated_at": test_run.updated_at,
     }

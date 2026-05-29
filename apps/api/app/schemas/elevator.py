@@ -41,3 +41,15 @@ class ElevatorRead(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ElevatorListItem(BaseModel):
+    id: UUID
+    code: str
+    name: str | None
+    status: str
+    floor_count: int
+    project_id: UUID
+    project_name: str
+    created_at: datetime
+    updated_at: datetime

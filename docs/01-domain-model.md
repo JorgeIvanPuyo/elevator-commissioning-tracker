@@ -231,6 +231,101 @@ Reglas:
 - Para valores repetidos de un mismo piso/escenario, se usa la medición más reciente.
 - La histerisis inicial compara subida vs bajada por tipo de viaje y corto vs largo dentro de la misma dirección cuando existen datos.
 
+### TestRunComparison
+Comparación calculada y read-only entre dos iteraciones de prueba del mismo elevador.
+
+Campos principales:
+- `baseline_test_run`
+- `current_test_run`
+- `global_metrics`
+- `floor_comparisons`
+- `parameter_comparisons`
+- `overall_trend` (`improved`, `worsened`, `mixed`, `unchanged`, `not_comparable`)
+- `summary_text`
+
+Reglas:
+- Ambas pruebas deben pertenecer al mismo elevador.
+- No se guardan resultados de comparación en base de datos.
+- Las métricas globales comparan cobertura, tolerancia final, renivelación aceptable, histerisis, pisos medidos y pisos críticos.
+- La comparación por piso usa el peor valor final efectivo disponible como representante inicial.
+- La comparación de parámetros usa HEX y decimal guardados en cada `TestRun`.
+
+## Entidades de workflow guiado
+
+Estas entidades agregan la capa de ejecución guiada por elevador. La experiencia principal evoluciona desde `TestRun` como centro de pantalla hacia un workflow activo por elevador, sin eliminar pruebas, parámetros ni mediciones existentes.
+
+Modelo conceptual:
+
+```txt
+Project
+  -> Elevator
+      -> CommissioningWorkflow
+          -> CommissioningStep
+              -> TestRun opcional
+              -> Evidence futura
+          -> TestRuns existentes
+          -> Parameters existentes
+          -> LevelingMeasurements existentes
+```
+
+### CommissioningWorkflow
+Representa el proceso completo de commissioning de un elevador.
+
+Campos:
+- `id`
+- `elevator_id`
+- `status` (`not_started`, `in_progress`, `completed`, `blocked`, `cancelled`)
+- `technician_name`
+- `started_at`
+- `completed_at`
+- `notes`
+- `created_at`
+- `updated_at`
+
+Reglas:
+- Para MVP se permite un workflow activo por elevador, con constraint único sobre `elevator_id`.
+- La inicialización es perezosa: el endpoint de initialize crea el workflow si no existe y devuelve el existente si ya fue creado.
+- La calibración mecánica de pesacargas es condición previa para los pasos de nivelación.
+- Si los pesacargas no están OK, el workflow debe mostrar bloqueados los pasos dependientes.
+
+### CommissioningStep
+Representa cada paso del proceso guiado.
+
+Campos:
+- `id`
+- `workflow_id`
+- `code`
+- `title`
+- `description`
+- `status` (`pending`, `in_progress`, `completed`, `skipped`, `not_applicable`, `blocked`)
+- `is_required`
+- `sort_order`
+- `completed_at`
+- `technician_name`
+- `notes`
+- `created_at`
+- `updated_at`
+
+Pasos base iniciales:
+- `LOAD_CELL_MECHANICAL_CALIBRATION`
+- `LOAD_MEMORY_ZERO_FULL`
+- `OVERLOAD_110_TEST`
+- `AUTO_LEVELING_A65E_A66E`
+- `AUTO_GAIN_COMPENSATION_A67E`
+- `ZONE_FINE_LEVELING`
+- `FLOOR_BY_FLOOR_MEASUREMENT`
+- `FLAG_ADJUSTMENT`
+- `FHM_RUN`
+- `FINAL_LEVELING_VALIDATION`
+
+Reglas:
+- `(workflow_id, code)` es único.
+- `(workflow_id, sort_order)` es único.
+- Si el estado pasa a `completed`, el backend asigna `completed_at` automáticamente cuando estaba vacío.
+- Si el estado cambia fuera de `completed`, el backend limpia `completed_at`.
+- A61E, A62E, A65E, A66E y A67E siguen siendo procesos técnicos, no parámetros HEX editables.
+- La evidencia por paso queda para una fase posterior.
+
 ### Evidence
 Fotos/videos/documentos asociados a prueba, elevador o medición.
 

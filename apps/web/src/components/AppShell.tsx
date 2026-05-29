@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 const navigationItems = [
   { label: "Dashboard", href: "/" },
   { label: "Proyectos", href: "/projects" },
-  { label: "Elevadores", href: "/projects" },
-  { label: "Pruebas", href: "/projects" },
-  { label: "Documentación", href: "/projects" },
+  { label: "Elevadores", href: "/elevators" },
+  { label: "Pruebas", href: "/test-runs" },
+  { label: "Documentación", href: "/docs" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

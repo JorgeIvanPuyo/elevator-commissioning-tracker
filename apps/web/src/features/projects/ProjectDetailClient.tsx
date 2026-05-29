@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
@@ -8,10 +9,13 @@ import { api } from "@/lib/api";
 import type { Elevator, Project } from "@/types/api";
 
 export function ProjectDetailClient({ projectId }: { projectId: string }) {
+  const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [elevators, setElevators] = useState<Elevator[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function loadProject() {
@@ -61,6 +65,55 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
     }
   }
 
+  async function handleUpdateProject(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!project) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    const form = new FormData(event.currentTarget);
+    const totalElevators = Number(form.get("total_elevators") || 0);
+    const defaultFloorCount = Number(form.get("default_floor_count") || project.default_floor_count);
+
+    try {
+      setProject(
+        await api.updateProject(project.id, {
+          name: String(form.get("name") || ""),
+          client_name: String(form.get("client_name") || "") || null,
+          location: String(form.get("location") || "") || null,
+          description: String(form.get("description") || "") || null,
+          total_elevators: totalElevators || null,
+          default_floor_count: defaultFloorCount,
+          status: String(form.get("status") || "active"),
+        }),
+      );
+      setIsEditing(false);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "No se pudo actualizar el proyecto");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDeleteProject() {
+    if (!project || !window.confirm(`Eliminar el proyecto "${project.name}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+    try {
+      await api.deleteProject(project.id);
+      router.push("/projects");
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar el proyecto");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
     <AppShell>
       {isLoading ? <p className="text-sm text-field-muted">Cargando proyecto...</p> : null}
@@ -76,7 +129,34 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
               <span className="border border-field-line bg-white px-3 py-2">{project.default_floor_count} pisos base</span>
               <span className="border border-field-line bg-white px-3 py-2">{elevators.length} elevadores registrados</span>
             </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button className="border border-field-line bg-white px-4 py-3 text-sm font-semibold hover:border-field-info" onClick={() => setIsEditing((current) => !current)}>
+                {isEditing ? "Cerrar edición" : "Editar"}
+              </button>
+              <button className="border border-field-fail bg-white px-4 py-3 text-sm font-semibold text-field-fail disabled:opacity-60" disabled={isDeleting} onClick={handleDeleteProject}>
+                {isDeleting ? "Eliminando..." : "Eliminar"}
+              </button>
+            </div>
           </div>
+
+          {isEditing ? (
+            <form className="mt-6 grid gap-3 border border-field-line bg-white p-4 shadow-panel md:grid-cols-3" onSubmit={handleUpdateProject}>
+              <input className="border border-field-line px-3 py-3 text-sm md:col-span-2" defaultValue={project.name} name="name" required />
+              <select className="border border-field-line px-3 py-3 text-sm" defaultValue={project.status} name="status">
+                <option value="active">Activo</option>
+                <option value="paused">Pausado</option>
+                <option value="completed">Completado</option>
+              </select>
+              <input className="border border-field-line px-3 py-3 text-sm" defaultValue={project.client_name ?? ""} name="client_name" placeholder="Cliente" />
+              <input className="border border-field-line px-3 py-3 text-sm" defaultValue={project.location ?? ""} name="location" placeholder="Ubicación" />
+              <input className="border border-field-line px-3 py-3 text-sm" defaultValue={project.total_elevators ?? 0} min={0} name="total_elevators" type="number" />
+              <input className="border border-field-line px-3 py-3 text-sm" defaultValue={project.default_floor_count} min={1} name="default_floor_count" type="number" />
+              <textarea className="border border-field-line px-3 py-3 text-sm md:col-span-2" defaultValue={project.description ?? ""} name="description" placeholder="Descripción" rows={3} />
+              <button className="bg-field-info px-4 py-3 text-sm font-semibold text-white hover:bg-field-ink md:col-span-3" disabled={isSaving}>
+                {isSaving ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </form>
+          ) : null}
 
           <form className="mt-6 grid gap-3 border border-field-line bg-white p-4 shadow-panel md:grid-cols-5" onSubmit={handleCreateElevator}>
             <input className="border border-field-line px-3 py-3 text-sm" name="code" placeholder="Código" required />

@@ -68,6 +68,15 @@ Base:
 - `GET /elevators/{elevator_id}`
 - `PATCH /elevators/{elevator_id}`
 - `DELETE /elevators/{elevator_id}`
+- `GET /elevators/{elevator_id}/operational-dashboard`
+
+### Commissioning Workflow
+- `GET /elevators/{elevator_id}/commissioning-workflow`
+- `POST /elevators/{elevator_id}/commissioning-workflow/initialize`
+- `PATCH /commissioning-workflows/{workflow_id}`
+- `PATCH /commissioning-steps/{step_id}`
+
+El endpoint initialize es idempotente: crea el workflow y los 10 pasos base si no existen, o devuelve el workflow existente. El dashboard operacional agrega datos compactos de elevador, proyecto, workflow, última prueba, resumen de nivelación y estado de parámetros críticos.
 
 ### Test Types
 - `GET /test-types`
@@ -80,6 +89,8 @@ Base:
 - `GET /test-runs/{test_run_id}`
 - `PATCH /test-runs/{test_run_id}`
 - `DELETE /test-runs/{test_run_id}`
+- `GET /test-runs/{test_run_id}/comparison-candidates`
+- `GET /test-runs/{test_run_id}/comparison?baseline_test_run_id=...`
 - `GET /test-runs/{test_run_id}/process-steps`
 - `PATCH /test-run-process-steps/{process_step_id}`
 
@@ -97,6 +108,7 @@ Base:
 
 El bulk de mediciones calcula en backend `effective_final_mm`, `is_final_within_tolerance` y `did_relevel`. El payload no debe depender de una bandera manual de renivelación.
 El resumen de nivelación es read-only y retorna KPIs agregados, estados y detalle por piso.
+La comparación entre pruebas es read-only y solo permite comparar `TestRun` del mismo elevador.
 
 ### Evidence
 - `POST /test-runs/{test_run_id}/evidence`

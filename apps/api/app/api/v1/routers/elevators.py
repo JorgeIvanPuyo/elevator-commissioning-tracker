@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies import to_http_exception
 from app.core.exceptions import AppError
 from app.db.session import get_db_session
-from app.schemas.elevator import ElevatorCreate, ElevatorRead, ElevatorUpdate
+from app.schemas.elevator import ElevatorCreate, ElevatorListItem, ElevatorRead, ElevatorUpdate
 from app.services import elevators as elevator_service
 
 router = APIRouter(tags=["elevators"])
@@ -35,6 +35,25 @@ async def list_project_elevators(
         return await elevator_service.list_project_elevators(session, project_id, limit=limit, offset=offset)
     except AppError as error:
         raise to_http_exception(error) from error
+
+
+@router.get("/elevators", response_model=list[ElevatorListItem])
+async def list_elevators(
+    project_id: UUID | None = None,
+    status: str | None = None,
+    search: str | None = None,
+    limit: int = Query(default=100, ge=1, le=300),
+    offset: int = Query(default=0, ge=0),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[ElevatorListItem]:
+    return await elevator_service.list_elevators(
+        session,
+        limit=limit,
+        offset=offset,
+        project_id=project_id,
+        status=status,
+        search=search,
+    )
 
 
 @router.get("/elevators/{elevator_id}", response_model=ElevatorRead)

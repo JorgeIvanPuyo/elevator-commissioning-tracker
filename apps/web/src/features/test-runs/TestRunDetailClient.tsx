@@ -8,7 +8,10 @@ import { api } from "@/lib/api";
 import { fromDatetimeLocalValue, previewHexDecimal, toDatetimeLocalValue } from "@/lib/hex";
 import { LevelingMeasurementEditor } from "@/features/test-runs/LevelingMeasurementEditor";
 import { LevelingSummaryPanel } from "@/features/test-runs/LevelingSummaryPanel";
+import { TestRunComparisonPanel } from "@/features/test-runs/TestRunComparisonPanel";
+import { ZoneLevelingAnalysisPanel } from "@/features/test-runs/ZoneLevelingAnalysisPanel";
 import type {
+  ComparisonCandidate,
   Elevator,
   LevelingSummary,
   ParameterDefinition,
@@ -19,6 +22,7 @@ import type {
   TestRunProcessStep,
   TestRunStatus,
   TestType,
+  ZoneLevelingAnalysis,
 } from "@/types/api";
 
 const statusLabels: Record<TestRunStatus, string> = {
@@ -44,6 +48,8 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
   const [savedValues, setSavedValues] = useState<TestRunParameterValue[]>([]);
   const [processSteps, setProcessSteps] = useState<TestRunProcessStep[]>([]);
   const [levelingSummary, setLevelingSummary] = useState<LevelingSummary | null>(null);
+  const [zoneLevelingAnalysis, setZoneLevelingAnalysis] = useState<ZoneLevelingAnalysis | null>(null);
+  const [comparisonCandidates, setComparisonCandidates] = useState<ComparisonCandidate[]>([]);
   const [parameterWarnings, setParameterWarnings] = useState<ParameterValidationWarning[]>([]);
   const [draft, setDraft] = useState<DraftByCode>({});
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
@@ -60,13 +66,24 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
     setIsLoading(true);
     setError(null);
     try {
-      const [runResponse, definitionResponse, parameterResponse, typeResponse, processStepResponse, levelingSummaryResponse] = await Promise.all([
+      const [
+        runResponse,
+        definitionResponse,
+        parameterResponse,
+        typeResponse,
+        processStepResponse,
+        levelingSummaryResponse,
+        zoneLevelingAnalysisResponse,
+        comparisonCandidateResponse,
+      ] = await Promise.all([
         api.getTestRun(testRunId),
         api.listParameterDefinitions(),
         api.listTestRunParameters(testRunId),
         api.listTestTypes(),
         api.listTestRunProcessSteps(testRunId),
         api.getLevelingSummary(testRunId),
+        api.getZoneLevelingAnalysis(testRunId),
+        api.listComparisonCandidates(testRunId),
       ]);
       const elevatorResponse = await api.getElevator(runResponse.elevator_id);
       setTestRun(runResponse);
@@ -76,6 +93,8 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
       setParameterWarnings(parameterResponse.validation_warnings);
       setProcessSteps(processStepResponse);
       setLevelingSummary(levelingSummaryResponse);
+      setZoneLevelingAnalysis(zoneLevelingAnalysisResponse);
+      setComparisonCandidates(comparisonCandidateResponse);
       setTestTypes(typeResponse);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No se pudo cargar la prueba");
@@ -90,7 +109,9 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
 
   async function refreshLevelingSummary() {
     try {
-      setLevelingSummary(await api.getLevelingSummary(testRunId));
+      const [summaryResponse, zoneAnalysisResponse] = await Promise.all([api.getLevelingSummary(testRunId), api.getZoneLevelingAnalysis(testRunId)]);
+      setLevelingSummary(summaryResponse);
+      setZoneLevelingAnalysis(zoneAnalysisResponse);
     } catch (summaryError) {
       setError(summaryError instanceof Error ? summaryError.message : "No se pudo actualizar el resumen de nivelación");
     }
@@ -203,6 +224,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
       const response = await api.saveTestRunParameters(testRunId, values);
       setSavedValues(response.values);
       setParameterWarnings(response.validation_warnings);
+      setZoneLevelingAnalysis(await api.getZoneLevelingAnalysis(testRunId));
       window.localStorage.removeItem(draftKey);
       setHasLocalDraft(false);
     } catch (saveError) {
@@ -386,6 +408,10 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
           </div>
 
           <LevelingSummaryPanel summary={levelingSummary} />
+
+          <ZoneLevelingAnalysisPanel analysis={zoneLevelingAnalysis} />
+
+          <TestRunComparisonPanel candidates={comparisonCandidates} testRunId={testRun.id} />
 
           <LevelingMeasurementEditor onMeasurementsChanged={refreshLevelingSummary} testRun={testRun} />
 

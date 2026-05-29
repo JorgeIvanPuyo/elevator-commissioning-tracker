@@ -37,3 +37,9 @@ class Elevator(Base):
     project = relationship("Project", back_populates="elevators")
     floors = relationship("ElevatorFloor", back_populates="elevator", cascade="all, delete-orphan")
     test_runs = relationship("TestRun", back_populates="elevator", cascade="all, delete-orphan")
+    commissioning_workflow = relationship(
+        "CommissioningWorkflow",
+        back_populates="elevator",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )

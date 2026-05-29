@@ -21,3 +21,16 @@ def normalize_hex_value(value: str | None) -> tuple[str | None, int | None]:
         raise AppError(f"Invalid HEX value: {value}")
 
     return normalized, int(normalized, 16)
+
+
+def hex_to_decimal(value: str | None) -> int | None:
+    _, decimal_value = normalize_hex_value(value)
+    return decimal_value
+
+
+def decimal_to_hex(value: int | None) -> str | None:
+    if value is None:
+        return None
+    if value < 0:
+        raise AppError("Cannot convert negative decimal value to HEX")
+    return format(value, "X")

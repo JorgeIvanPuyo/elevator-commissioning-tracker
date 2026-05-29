@@ -14,10 +14,15 @@ Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` if the backend is not using
 
 ## Current Screens
 
+- `/`: dashboard with backend overview data.
 - `/projects`: list and create projects.
-- `/projects/[projectId]`: project detail, elevator list and elevator creation.
+- `/projects/[projectId]`: project detail, edit/delete project, elevator list and elevator creation.
+- `/elevators`: global elevator list.
 - `/elevators/[elevatorId]`: elevator detail, floor labels, test run list and test run creation.
+- `/test-runs`: global test run list.
 - `/test-runs/[testRunId]`: test run detail, A61E-A67E process checklist and HEX parameter editor with local draft protection.
+- `/docs`: static Markdown technical documentation.
+- `/docs/[slug]`: Markdown document viewer.
 
 ## Checks
 

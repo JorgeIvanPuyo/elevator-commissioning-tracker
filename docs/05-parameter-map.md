@@ -41,6 +41,46 @@
 | 271 | 277 | high zone / up bias |
 | 272 | 278 | high zone / down bias |
 
+## Zone Leveling Analysis Rules
+
+Slice B agrega un análisis calculado/read-only por `TestRun`:
+
+`GET /api/v1/test-runs/{test_run_id}/zone-leveling-analysis`
+
+Reglas:
+- Las zonas se calculan con `ElevatorFloor.sort_order`, no con el label visible.
+- Solo participan pisos con `is_served = true` e `is_leveling_required = true`.
+- Para 62 pisos, la división por defecto queda:
+  - low: 1-20.
+  - mid: 21-41.
+  - high: 42-62.
+- Cada medición se asigna a la zona del piso destino.
+- Solo se usan mediciones con `landing_mm` no nulo.
+- El análisis agrupa por zona y dirección (`up`, `down`).
+- El promedio calculado es `average_landing_mm`.
+
+Regla MVP de delta:
+
+```txt
+suggested_delta_decimal = round(-average_landing_mm)
+```
+
+Motivo:
+- Si `landing_mm` es positivo, la cabina queda alta y se reducen los bias relacionados.
+- Si `landing_mm` es negativo, la cabina queda baja y se aumentan los bias relacionados.
+- Esta convención queda centralizada en servicio backend para poder ajustarla después de validación en campo.
+
+La recomendación aplica el mismo delta a MIN y MAX para conservar la ventana actual:
+- `suggested_min_decimal = current_min_decimal + suggested_delta_decimal`
+- `suggested_max_decimal = current_max_decimal + suggested_delta_decimal`
+- Los sugeridos se muestran en decimal y HEX.
+
+Warnings no bloqueantes:
+- Si `MAX <= MIN`, retornar warning crítico.
+- Si `MAX - MIN` está fuera de 4..6, retornar warning.
+- Si faltan valores de parámetros, retornar status `missing_parameters`.
+- Si faltan mediciones, retornar status `missing_measurements`.
+
 ## Load Compensation A67E
 | Code |
 |---|

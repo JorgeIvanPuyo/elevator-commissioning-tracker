@@ -2,6 +2,8 @@ from fastapi import APIRouter
 
 from app.api.v1.routes import health
 from app.api.v1.routers import (
+    commissioning,
+    dashboard,
     elevator_floors,
     elevators,
     leveling_measurements,
@@ -13,6 +15,8 @@ from app.api.v1.routers import (
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])
+api_router.include_router(commissioning.router)
+api_router.include_router(dashboard.router)
 api_router.include_router(projects.router)
 api_router.include_router(elevators.router)
 api_router.include_router(elevator_floors.router)

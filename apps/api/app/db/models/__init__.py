@@ -1,3 +1,5 @@
+from app.db.models.commissioning_step import CommissioningStep
+from app.db.models.commissioning_workflow import CommissioningWorkflow
 from app.db.models.elevator import Elevator
 from app.db.models.elevator_floor import ElevatorFloor
 from app.db.models.leveling_measurement import LevelingMeasurement
@@ -10,6 +12,8 @@ from app.db.models.test_type import TestType
 
 __all__ = [
     "Elevator",
+    "CommissioningStep",
+    "CommissioningWorkflow",
     "ElevatorFloor",
     "LevelingMeasurement",
     "ParameterDefinition",

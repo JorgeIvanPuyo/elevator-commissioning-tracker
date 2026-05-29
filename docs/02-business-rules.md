@@ -2,6 +2,29 @@
 
 ## Reglas de prueba de carga
 
+## Workflow guiado de commissioning
+
+### Estado general
+- Cada elevador puede tener un workflow activo de commissioning.
+- El workflow se inicializa explícitamente desde la pantalla de elevador.
+- La inicialización es idempotente: ejecutar initialize varias veces no duplica pasos.
+- Estados válidos de workflow: `not_started`, `in_progress`, `completed`, `blocked`, `cancelled`.
+- Estados válidos de paso: `pending`, `in_progress`, `completed`, `skipped`, `not_applicable`, `blocked`.
+
+### Pasos bloqueantes
+- Los tres primeros pasos son requeridos y bloqueantes:
+  - Calibración mecánica de pesacargas.
+  - Escritura 0% / 100% en memoria.
+  - Prueba 110% de carga.
+- Si los pasos bloqueantes no están completados, la UI debe mostrar los pasos dependientes de nivelación como bloqueados visualmente.
+- El bloqueo visual no elimina datos existentes ni impide consultar pruebas, parámetros o mediciones ya registrados.
+
+### Trazabilidad de pasos
+- Cada paso permite registrar estado, técnico y notas.
+- Si un paso se marca `completed`, el backend asigna `completed_at` automáticamente cuando estaba vacío.
+- Si un paso deja de estar `completed`, `completed_at` se limpia para mantener consistencia.
+- Los pasos opcionales pueden marcarse como `skipped` o `not_applicable`.
+
 ### Procesos clave
 - A61E ejecuta la calibración de potenciómetros a 0% de carga.
 - A62E ejecuta la calibración de potenciómetros a 100% de carga.
@@ -88,6 +111,15 @@ Si:
 - Histerisis <= 5 mm, pero
 - Nivel final está fuera de ±5 mm,
 entonces los parámetros pueden estar bien y se recomienda revisar/mover físicamente la bandera.
+
+### Comparación entre iteraciones
+- Una prueba solo puede compararse contra otra prueba del mismo elevador.
+- Una métrica mejora si aumenta cuando “más alto es mejor” o disminuye cuando “más bajo es mejor”, como pisos críticos.
+- Un piso mejora si pasa de fuera de tolerancia a dentro de tolerancia, o si reduce el error absoluto de nivel final.
+- Un piso empeora si pasa de dentro a fuera de tolerancia, o si aumenta el error absoluto de nivel final.
+- Un piso queda como `newly_measured` si no tenía medición comparable en baseline y sí la tiene en la prueba actual.
+- Un piso queda como `missing_current` si tenía medición en baseline y falta en la prueba actual.
+- La comparación de parámetros marca cambios por diferencia de HEX/decimal y muestra warnings vigentes de la prueba actual.
 
 ## Colores técnicos de medidas
 - Valor positivo: cabina alta respecto al pasillo. Mostrar en azul.

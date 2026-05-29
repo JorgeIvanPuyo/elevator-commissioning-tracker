@@ -222,3 +222,66 @@ async def test_list_seeded_test_types(client) -> None:
         "PARAMETER_ADJUSTMENT",
         "FLOOR_MEASUREMENT",
     ]
+
+
+async def test_dashboard_overview_returns_real_counts(client) -> None:
+    project = await create_project(client, name="Dashboard Project")
+    elevator = (await client.post(f"/api/v1/projects/{project['id']}/elevators", json={"code": "D1"})).json()
+    test_types = (await client.get("/api/v1/test-types")).json()
+    fine_leveling = next(item for item in test_types if item["code"] == "FINE_LEVELING")
+    await client.post(
+        f"/api/v1/elevators/{elevator['id']}/test-runs",
+        json={"test_type_id": fine_leveling["id"], "technician_name": "Tech", "status": "completed", "title": "Final pass"},
+    )
+
+    response = await client.get("/api/v1/dashboard/overview")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["projects_count"] == 1
+    assert body["active_projects_count"] == 1
+    assert body["elevators_count"] == 1
+    assert body["test_runs_count"] == 1
+    assert body["completed_test_runs_count"] == 1
+    assert body["latest_projects"][0]["elevators_count"] == 1
+    assert body["latest_test_runs"][0]["elevator_code"] == "D1"
+    assert body["latest_test_runs"][0]["project_name"] == "Dashboard Project"
+
+
+async def test_list_global_elevators_with_search_filter(client) -> None:
+    project_a = await create_project(client, name="Tower Alpha")
+    project_b = await create_project(client, name="Tower Beta")
+    await client.post(f"/api/v1/projects/{project_a['id']}/elevators", json={"code": "A9", "name": "Service A"})
+    await client.post(f"/api/v1/projects/{project_b['id']}/elevators", json={"code": "B10", "name": "Service B"})
+
+    response = await client.get("/api/v1/elevators?search=beta")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["code"] == "B10"
+    assert body[0]["project_name"] == "Tower Beta"
+
+
+async def test_list_global_test_runs_with_status_filter(client) -> None:
+    project = await create_project(client, name="Test Run Project")
+    elevator = (await client.post(f"/api/v1/projects/{project['id']}/elevators", json={"code": "TR1"})).json()
+    test_types = (await client.get("/api/v1/test-types")).json()
+    fine_leveling = next(item for item in test_types if item["code"] == "FINE_LEVELING")
+    await client.post(
+        f"/api/v1/elevators/{elevator['id']}/test-runs",
+        json={"test_type_id": fine_leveling["id"], "technician_name": "Ana", "status": "draft", "title": "Draft run"},
+    )
+    await client.post(
+        f"/api/v1/elevators/{elevator['id']}/test-runs",
+        json={"test_type_id": fine_leveling["id"], "technician_name": "Ana", "status": "completed", "title": "Completed run"},
+    )
+
+    response = await client.get("/api/v1/test-runs?status=completed")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["name"] == "Completed run"
+    assert body[0]["elevator_code"] == "TR1"
+    assert body[0]["project_name"] == "Test Run Project"
