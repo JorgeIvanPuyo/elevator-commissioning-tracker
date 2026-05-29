@@ -58,6 +58,7 @@ docker-compose run --rm --build api alembic upgrade head
 
 - `GET /api/v1/dashboard/overview`
 - `GET /api/v1/elevators`
+- `GET /api/v1/elevators/{elevator_id}/commissioning-overview`
 - `GET /api/v1/test-runs`
 
 ## Test Run Endpoints

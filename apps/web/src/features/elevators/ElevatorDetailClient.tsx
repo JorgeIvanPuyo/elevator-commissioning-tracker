@@ -426,6 +426,13 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
               </section>
 
               <section className="border border-field-line bg-white shadow-panel">
+                <PanelHeader title="Resumen de commissioning" subtitle="Vista consolidada para cierre técnico" />
+                <Link className="block border-t border-field-line p-3 text-sm font-semibold text-field-info" href={`/elevators/${elevatorId}/commissioning-overview`}>
+                  Ver resumen de commissioning
+                </Link>
+              </section>
+
+              <section className="border border-field-line bg-white shadow-panel">
                 <PanelHeader title="Acciones rápidas" subtitle="Trabajo frecuente en campo" />
                 <div className="grid gap-2 border-t border-field-line p-3 text-sm">
                   {dashboard.quick_links.latest_test_run_id ? (

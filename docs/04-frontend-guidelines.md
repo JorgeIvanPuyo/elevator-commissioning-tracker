@@ -64,6 +64,22 @@ La vista debe ser compacta y técnica:
 - Acciones simples por paso: iniciar, completar, no aplica y bloquear.
 - Notas por paso guardadas directamente en backend.
 - Paneles laterales para parámetros críticos, zonas, resumen de nivelación y acciones rápidas.
+- Link visible a `Resumen de commissioning` para cierre técnico consolidado.
+
+## Resumen de commissioning por elevador
+La ruta `/elevators/[elevatorId]/commissioning-overview` es una vista read-only de cierre.
+
+Debe mostrar en formato compacto:
+- Estado general y razones pendientes.
+- Progreso del workflow guiado.
+- Prerrequisitos de pesacargas/carga.
+- Estado de ventanas de parámetros de nivelación fina.
+- Resumen de análisis por zonas.
+- Resumen de movimiento de banderas.
+- FHM y validación final.
+- Links a la prueba más reciente, matriz de parámetros, recomendaciones de banderas y validación final.
+
+Esta vista no edita datos. Sirve para supervisión, cierre técnico y futura generación de reporte.
 
 ## Visualización 62 pisos
 Crear componente `ElevatorShaftMap`.

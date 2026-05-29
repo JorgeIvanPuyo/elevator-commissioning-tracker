@@ -609,6 +609,82 @@ export type ElevatorOperationalDashboard = {
   };
 };
 
+export type CommissioningOverviewStatus = "not_started" | "in_progress" | "needs_attention" | "ready_to_close" | "completed";
+
+export type CommissioningOverview = {
+  elevator: {
+    id: string;
+    code: string;
+    name: string | null;
+    project_id: string;
+    project_name: string;
+    status: string;
+  };
+  workflow: {
+    id: string;
+    status: CommissioningWorkflowStatus;
+    progress_percent: number;
+    completed_steps: number;
+    total_steps: number;
+    critical_blockers: string[];
+    steps: Array<{
+      code: string;
+      title: string;
+      status: CommissioningStepStatus;
+      is_required: boolean;
+      completed_at: string | null;
+      notes: string | null;
+    }>;
+  } | null;
+  latest_test_run: {
+    id: string;
+    name: string;
+    status: TestRunStatus;
+    technician_name: string;
+    created_at: string;
+  } | null;
+  load_readiness: {
+    mechanical_calibration_completed: boolean;
+    zero_full_memory_completed: boolean;
+    overload_110_completed: boolean;
+    ready_for_leveling: boolean;
+    warnings: string[];
+  };
+  parameter_matrix: {
+    ok_windows: number;
+    warning_windows: number;
+    missing_windows: number;
+    most_critical_warning: string | null;
+  };
+  zone_analysis: {
+    available: boolean;
+    rows_count: number;
+    warnings_count: number;
+    max_abs_average_landing_mm: number | null;
+  };
+  flag_adjustments: {
+    available: boolean;
+    floors_requiring_adjustment: number;
+    floors_ok: number;
+    floors_missing_data: number;
+    max_abs_recommended_movement_mm: number | null;
+  };
+  final_validation: {
+    available: boolean;
+    fhm_completed: boolean;
+    floors_within_tolerance: number;
+    floors_out_of_tolerance: number;
+    floors_missing_data: number;
+    within_tolerance_percent: number;
+    ready_to_close: boolean;
+  };
+  overall_status: {
+    status: CommissioningOverviewStatus;
+    label: string;
+    reasons: string[];
+  };
+};
+
 export type DashboardLatestProject = {
   id: string;
   name: string;

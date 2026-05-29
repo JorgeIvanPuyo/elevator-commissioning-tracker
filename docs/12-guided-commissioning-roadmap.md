@@ -370,16 +370,32 @@ Implementar carga de fotos/videos por paso crítico.
 
 No urgente.
 
-### Slice G — Reporte final por elevador
+### Slice G — Report-ready commissioning overview by elevator
 
-Implementar reporte final con:
-- Prueba de carga.
-- Parámetros finales.
-- Mediciones finales.
-- Movimiento de banderas.
-- Evidencias.
+Implementar una vista read-only de cierre técnico con:
+- [x] Workflow y pasos completados.
+- [x] Prueba técnica más reciente.
+- [x] Readiness de pesacargas/carga.
+- [x] Estado de parámetros 026D-278.
+- [x] Resumen de análisis por zonas.
+- [x] Resumen de movimiento de banderas.
+- [x] FHM y validación final.
+- [x] Estado general: no iniciado, en proceso, requiere revisión, listo para cierre o completado.
+- [x] Links a las pantallas operativas para revisar detalle.
+- [ ] Evidencias cuando Slice F esté implementado.
 
-No urgente.
+Implementación actual:
+- Endpoint read-only: `GET /api/v1/elevators/{elevator_id}/commissioning-overview`.
+- Página frontend: `/elevators/[elevatorId]/commissioning-overview`.
+- La vista usa el último `TestRun` del elevador para parámetros, análisis, banderas y validación final.
+- No persiste un reporte nuevo; consolida trazabilidad existente y prepara la futura generación de reportes.
+
+### Slice H — Final report generation foundation
+
+Siguiente slice recomendado si la vista de overview queda estable:
+- Definir contrato report-ready reutilizable.
+- Preparar exportación del estado consolidado.
+- Mantener PDF real para una iteración posterior si aún se requiere pulir datos.
 
 ## Decisiones que se conservan
 

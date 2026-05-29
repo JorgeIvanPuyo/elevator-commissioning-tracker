@@ -121,21 +121,25 @@ Project
 - [ ] Mantener GCS como storage de archivos.
 
 ### Slice G — Reporte final por elevador
-- [ ] Reporte final con prueba de carga.
-- [ ] Incluir parámetros finales.
-- [ ] Incluir mediciones finales.
-- [ ] Incluir movimiento de banderas.
-- [ ] Incluir evidencias.
+- [x] Crear endpoint read-only de resumen de commissioning por elevador.
+- [x] Agregar workflow, última prueba, readiness de carga y estado general.
+- [x] Incluir resumen de parámetros finales 026D-278.
+- [x] Incluir resumen de análisis por zonas.
+- [x] Incluir resumen de movimiento de banderas.
+- [x] Incluir FHM y validación final.
+- [x] Crear página frontend compacta para cierre técnico.
+- [ ] Incluir evidencias cuando Slice F esté implementado.
+- [ ] Exportar PDF en un slice posterior.
 
 ## 4. Próximos slices recomendados
 
-Próximo slice recomendado: **Slice G — Report-ready commissioning overview by elevator**.
+Próximo slice recomendado: **Slice H — Final report generation foundation**.
 
 Objetivo del slice:
-- Ensamblar pasos completados, parámetros finales, análisis por zonas, banderas, FHM y validación final en una vista por elevador.
-- Preparar la estructura visual y de datos para un reporte final antes de PDF.
-- Mantener evidencias como placeholder hasta que el campo lo necesite.
-- Reducir navegación para cierre técnico de cada elevador.
+- Preparar la exportación del resumen de commissioning ya consolidado.
+- Definir contrato de datos report-ready estable antes de PDF.
+- Permitir revisar/compartir el estado final sin reconsultar múltiples pantallas.
+- Dejar evidencias como siguiente prioridad alternativa si el campo las requiere antes del reporte.
 
 Pasos base iniciales:
 

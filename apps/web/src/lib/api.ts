@@ -2,6 +2,7 @@ import type {
   DashboardOverview,
   CommissioningStep,
   CommissioningStepUpdate,
+  CommissioningOverview,
   CommissioningWorkflow,
   CommissioningWorkflowUpdate,
   Elevator,
@@ -99,6 +100,7 @@ export const api = {
   getElevator: (elevatorId: string) => request<Elevator>(`/api/v1/elevators/${elevatorId}`),
   getElevatorOperationalDashboard: (elevatorId: string) =>
     request<ElevatorOperationalDashboard>(`/api/v1/elevators/${elevatorId}/operational-dashboard`),
+  getCommissioningOverview: (elevatorId: string) => request<CommissioningOverview>(`/api/v1/elevators/${elevatorId}/commissioning-overview`),
   getCommissioningWorkflow: (elevatorId: string) => request<CommissioningWorkflow>(`/api/v1/elevators/${elevatorId}/commissioning-workflow`),
   initializeCommissioningWorkflow: (elevatorId: string) =>
     request<CommissioningWorkflow>(`/api/v1/elevators/${elevatorId}/commissioning-workflow/initialize`, { method: "POST" }),

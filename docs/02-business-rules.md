@@ -171,8 +171,11 @@ Después de mover banderas:
 - El archivo se almacena en Google Cloud Storage.
 
 ## Informes
-- El informe por elevador queda para una fase posterior.
-- La prioridad actual es capturar datos, sostener trazabilidad, comparar iteraciones, calcular KPIs y luego generar reportes.
+- La vista de resumen de commissioning por elevador es read-only y sirve como base previa a reportes PDF.
+- Usa el último `TestRun` del elevador para resumir parámetros, análisis por zonas, banderas y validación final.
+- El estado `ready_to_close` requiere prerrequisitos de carga completos, pasos requeridos completos, FHM completado, validación final disponible, sin pisos fuera de tolerancia y sin datos finales faltantes.
+- El estado `needs_attention` aparece si hay prerrequisitos pendientes, bloqueos críticos, warnings de parámetros, FHM pendiente, pisos fuera de tolerancia o validación final incompleta.
+- El resumen no reemplaza los editores operativos; enlaza a la prueba más reciente, matriz de parámetros, recomendaciones de banderas y validación final.
 
 ## Documentación técnica
 - Los manuales se manejan como archivos Markdown renderizados en frontend.

@@ -69,6 +69,7 @@ Base:
 - `PATCH /elevators/{elevator_id}`
 - `DELETE /elevators/{elevator_id}`
 - `GET /elevators/{elevator_id}/operational-dashboard`
+- `GET /elevators/{elevator_id}/commissioning-overview`
 
 ### Commissioning Workflow
 - `GET /elevators/{elevator_id}/commissioning-workflow`
@@ -76,7 +77,7 @@ Base:
 - `PATCH /commissioning-workflows/{workflow_id}`
 - `PATCH /commissioning-steps/{step_id}`
 
-El endpoint initialize es idempotente: crea el workflow y los 10 pasos base si no existen, o devuelve el workflow existente. El dashboard operacional agrega datos compactos de elevador, proyecto, workflow, última prueba, resumen de nivelación y estado de parámetros críticos.
+El endpoint initialize es idempotente: crea el workflow y los 10 pasos base si no existen, o devuelve el workflow existente. El dashboard operacional agrega datos compactos de elevador, proyecto, workflow, última prueba, resumen de nivelación y estado de parámetros críticos. El commissioning overview es read-only y consolida workflow, último `TestRun`, readiness de carga, matriz de parámetros, análisis por zonas, banderas, FHM y validación final para cierre técnico.
 
 ### Test Types
 - `GET /test-types`

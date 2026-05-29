@@ -218,6 +218,25 @@ Campos principales:
 - `test_run_id`
 - `elevator_id`
 - `measurement_count`
+
+### CommissioningOverview
+Vista calculada y read-only por elevador para cierre técnico.
+
+No es una tabla nueva. Agrega datos existentes para responder si el elevador está listo para cierre:
+- `Elevator` y `Project`.
+- `CommissioningWorkflow` y sus pasos.
+- Último `TestRun` del elevador.
+- Estado de prerrequisitos de carga.
+- Resumen de ventanas MIN/MAX de parámetros 026D-278.
+- Resumen de análisis por zonas.
+- Resumen de movimiento de banderas.
+- Estado FHM y validación final.
+
+Reglas:
+- Debe manejar datos faltantes sin romper la respuesta.
+- Usa el último `TestRun` del elevador como fuente operativa para parámetros, mediciones y análisis.
+- Calcula un `overall_status` de cierre: `not_started`, `in_progress`, `needs_attention`, `ready_to_close` o `completed`.
+- No persiste resultados de reporte; solo consolida trazabilidad existente.
 - `required_floor_count`
 - `measured_required_floor_count`
 - `coverage_percentage`

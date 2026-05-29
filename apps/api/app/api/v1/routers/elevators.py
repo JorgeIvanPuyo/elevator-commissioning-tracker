@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies import to_http_exception
 from app.core.exceptions import AppError
 from app.db.session import get_db_session
+from app.schemas.commissioning_overview import CommissioningOverviewRead
 from app.schemas.elevator import ElevatorCreate, ElevatorListItem, ElevatorRead, ElevatorUpdate
+from app.services import commissioning_overview as commissioning_overview_service
 from app.services import elevators as elevator_service
 
 router = APIRouter(tags=["elevators"])
@@ -63,6 +65,17 @@ async def get_elevator(
 ) -> ElevatorRead:
     try:
         return await elevator_service.get_elevator(session, elevator_id)
+    except AppError as error:
+        raise to_http_exception(error) from error
+
+
+@router.get("/elevators/{elevator_id}/commissioning-overview", response_model=CommissioningOverviewRead)
+async def get_commissioning_overview(
+    elevator_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+) -> CommissioningOverviewRead:
+    try:
+        return await commissioning_overview_service.get_commissioning_overview(session, elevator_id)
     except AppError as error:
         raise to_http_exception(error) from error
 
