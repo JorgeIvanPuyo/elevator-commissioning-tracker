@@ -10,6 +10,7 @@ import type {
   ElevatorFloorUpdate,
   ElevatorOperationalDashboard,
   ElevatorListItem,
+  FlagAdjustmentRecommendations,
   ComparisonCandidate,
   LevelingDirection,
   LevelingMeasurementBulkItem,
@@ -156,6 +157,8 @@ export const api = {
   deleteLevelingMeasurement: (measurementId: string) => request<void>(`/api/v1/leveling-measurements/${measurementId}`, { method: "DELETE" }),
   getLevelingSummary: (testRunId: string) => request<LevelingSummary>(`/api/v1/test-runs/${testRunId}/leveling-summary`),
   getZoneLevelingAnalysis: (testRunId: string) => request<ZoneLevelingAnalysis>(`/api/v1/test-runs/${testRunId}/zone-leveling-analysis`),
+  getFlagAdjustmentRecommendations: (testRunId: string) =>
+    request<FlagAdjustmentRecommendations>(`/api/v1/test-runs/${testRunId}/flag-adjustment-recommendations`),
   listComparisonCandidates: (testRunId: string) => request<ComparisonCandidate[]>(`/api/v1/test-runs/${testRunId}/comparison-candidates`),
   compareTestRuns: (testRunId: string, baselineTestRunId: string) =>
     request<TestRunComparison>(`/api/v1/test-runs/${testRunId}/comparison?baseline_test_run_id=${baselineTestRunId}`),

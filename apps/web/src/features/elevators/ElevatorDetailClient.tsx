@@ -13,6 +13,7 @@ import type {
   CommissioningWorkflowStatus,
   ElevatorFloor,
   ElevatorOperationalDashboard,
+  FlagAdjustmentRecommendations,
   OperationalParameterValue,
   TestRun,
   TestRunStatus,
@@ -50,6 +51,7 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
   const [dashboard, setDashboard] = useState<ElevatorOperationalDashboard | null>(null);
   const [workflow, setWorkflow] = useState<CommissioningWorkflow | null>(null);
   const [latestZoneAnalysis, setLatestZoneAnalysis] = useState<ZoneLevelingAnalysis | null>(null);
+  const [latestFlagAdjustments, setLatestFlagAdjustments] = useState<FlagAdjustmentRecommendations | null>(null);
   const [floors, setFloors] = useState<ElevatorFloor[]>([]);
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [testTypes, setTestTypes] = useState<TestType[]>([]);
@@ -80,9 +82,13 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
       const latestZoneAnalysisResponse = dashboardResponse.quick_links.latest_test_run_id
         ? await api.getZoneLevelingAnalysis(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
         : null;
+      const latestFlagAdjustmentsResponse = dashboardResponse.quick_links.latest_test_run_id
+        ? await api.getFlagAdjustmentRecommendations(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
+        : null;
       setDashboard(dashboardResponse);
       setWorkflow(workflowResponse);
       setLatestZoneAnalysis(latestZoneAnalysisResponse);
+      setLatestFlagAdjustments(latestFlagAdjustmentsResponse);
       setFloors(floorResponse);
       setTestRuns(testRunResponse);
       setTestTypes(testTypeResponse);
@@ -132,8 +138,12 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
     const latestZoneAnalysisResponse = dashboardResponse.quick_links.latest_test_run_id
       ? await api.getZoneLevelingAnalysis(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
       : null;
+    const latestFlagAdjustmentsResponse = dashboardResponse.quick_links.latest_test_run_id
+      ? await api.getFlagAdjustmentRecommendations(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
+      : null;
     setDashboard(dashboardResponse);
     setLatestZoneAnalysis(latestZoneAnalysisResponse);
+    setLatestFlagAdjustments(latestFlagAdjustmentsResponse);
   }
 
   async function updateStep(step: CommissioningStep, status: CommissioningStepStatus) {
@@ -346,6 +356,29 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
                     Abrir análisis por zonas
                   </Link>
                 ) : null}
+              </section>
+
+              <section className="border border-field-line bg-white shadow-panel">
+                <PanelHeader title="Banderas" subtitle={latestFlagAdjustments ? "Recomendación desde última prueba" : "Sin recomendaciones disponibles"} />
+                {latestFlagAdjustments ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-0 border-t border-field-line text-sm">
+                      <MetricCell label="Ajuste" value={String(latestFlagAdjustments.summary.floors_requiring_flag_adjustment)} />
+                      <MetricCell label="OK" value={String(latestFlagAdjustments.summary.floors_within_tolerance)} />
+                      <MetricCell
+                        label="Sin datos"
+                        value={String(latestFlagAdjustments.summary.floors_missing_data + latestFlagAdjustments.summary.floors_partial_data)}
+                      />
+                    </div>
+                    {dashboard.quick_links.latest_test_run_id ? (
+                      <Link className="block border-t border-field-line p-3 text-sm font-semibold text-field-info" href={`/test-runs/${dashboard.quick_links.latest_test_run_id}#flag-adjustments`}>
+                        Ver recomendaciones
+                      </Link>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="border-t border-field-line p-3 text-sm text-field-muted">Crea mediciones finales de subida y bajada para calcular movimientos.</p>
+                )}
               </section>
 
               <section className="border border-field-line bg-white shadow-panel">

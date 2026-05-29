@@ -121,6 +121,14 @@ El detalle de prueba debe mostrar un resumen técnico de nivelación con:
 - Estados vacíos cuando todavía no hay mediciones o pares suficientes para histerisis.
 - Actualización del resumen después de guardar mediciones.
 
+El detalle de prueba debe mostrar una tabla de recomendaciones de movimiento de banderas:
+- Cards compactas para pisos que requieren ajuste, pisos dentro de tolerancia, datos faltantes/parciales y movimiento máximo.
+- Tabla desktop y cards apilables en mobile.
+- Columnas: piso, bajada final, subida final, movimiento recomendado y estado.
+- Estados: dentro de tolerancia, requiere ajuste, datos incompletos y sin datos.
+- Valores positivos en azul y negativos en naranja, siguiendo la convención técnica de medidas.
+- La tabla es read-only; el movimiento se calcula desde mediciones finales actuales.
+
 El detalle de prueba debe permitir comparar la prueba actual contra otra iteración del mismo elevador:
 - Selector de baseline con candidatos disponibles.
 - Cards comparativas para cobertura, tolerancia final, renivelación, histerisis y pisos críticos.

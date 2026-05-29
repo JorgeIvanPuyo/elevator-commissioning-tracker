@@ -112,6 +112,24 @@ Si:
 - Nivel final está fuera de ±5 mm,
 entonces los parámetros pueden estar bien y se recomienda revisar/mover físicamente la bandera.
 
+Slice D implementa una recomendación calculada/read-only por piso usando mediciones finales piso a piso:
+- Solo se consideran pisos con `is_served = true` e `is_leveling_required = true`.
+- Para cada piso se usa la última medición final bajando y la última medición final subiendo del `TestRun`.
+- Si no hay mediciones finales, el piso queda `missing_data`.
+- Si solo existe una dirección, el piso queda `partial_data` y no se calcula recomendación completa.
+- Si ambas direcciones existen y ambas están dentro de ±5 mm, el movimiento recomendado es `0`.
+- Si al menos una dirección está fuera de ±5 mm:
+
+```txt
+average_final = (down_final_mm + up_final_mm) / 2
+recommended_flag_movement_mm = -average_final
+```
+
+- La recomendación se redondea a precisión de 0.5 mm.
+- Signo positivo significa mover bandera hacia arriba.
+- Signo negativo significa mover bandera hacia abajo.
+- Las recomendaciones no se persisten como registros; se calculan desde las mediciones actuales.
+
 ### Comparación entre iteraciones
 - Una prueba solo puede compararse contra otra prueba del mismo elevador.
 - Una métrica mejora si aumenta cuando “más alto es mejor” o disminuye cuando “más bajo es mejor”, como pisos críticos.

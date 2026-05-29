@@ -354,6 +354,39 @@ export type ZoneLevelingAnalysis = {
   global_warnings: ZoneLevelingWarning[];
 };
 
+export type FlagAdjustmentStatus = "ok" | "requires_adjustment" | "partial_data" | "missing_data" | "not_required";
+
+export type FlagAdjustmentSummary = {
+  total_required_floors: number;
+  floors_with_complete_data: number;
+  floors_within_tolerance: number;
+  floors_requiring_flag_adjustment: number;
+  floors_missing_data: number;
+  floors_partial_data: number;
+  max_abs_recommended_movement_mm: number | null;
+};
+
+export type FlagAdjustmentRow = {
+  floor_id: string;
+  floor_label: string;
+  sort_order: number;
+  down_final_mm: number | null;
+  up_final_mm: number | null;
+  average_final_mm: number | null;
+  recommended_flag_movement_mm: number | null;
+  status: FlagAdjustmentStatus;
+  within_tolerance: boolean | null;
+  notes: string[];
+};
+
+export type FlagAdjustmentRecommendations = {
+  test_run_id: string;
+  elevator_id: string;
+  tolerance_mm: number;
+  summary: FlagAdjustmentSummary;
+  rows: FlagAdjustmentRow[];
+};
+
 export type ComparisonTrend = "improved" | "worsened" | "mixed" | "unchanged" | "not_comparable";
 export type FloorComparisonTrend = ComparisonTrend | "newly_measured" | "missing_current";
 

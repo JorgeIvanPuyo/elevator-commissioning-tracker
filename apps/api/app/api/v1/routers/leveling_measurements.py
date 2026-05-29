@@ -6,9 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies import to_http_exception
 from app.core.exceptions import AppError
 from app.db.session import get_db_session
+from app.schemas.flag_adjustment import FlagAdjustmentRecommendationsRead
 from app.schemas.leveling_measurement import LevelingMeasurementBulkRequest, LevelingMeasurementBulkResponse
 from app.schemas.leveling_summary import LevelingSummaryRead
 from app.schemas.zone_leveling import ZoneLevelingAnalysisRead
+from app.services import flag_adjustments as flag_adjustment_service
 from app.services import leveling_measurements as leveling_measurement_service
 from app.services import leveling_summary as leveling_summary_service
 from app.services import zone_leveling as zone_leveling_service
@@ -68,6 +70,17 @@ async def get_zone_leveling_analysis(
 ) -> ZoneLevelingAnalysisRead:
     try:
         return await zone_leveling_service.get_zone_leveling_analysis(session, test_run_id)
+    except AppError as error:
+        raise to_http_exception(error) from error
+
+
+@router.get("/test-runs/{test_run_id}/flag-adjustment-recommendations", response_model=FlagAdjustmentRecommendationsRead)
+async def get_flag_adjustment_recommendations(
+    test_run_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+) -> FlagAdjustmentRecommendationsRead:
+    try:
+        return await flag_adjustment_service.get_flag_adjustment_recommendations(session, test_run_id)
     except AppError as error:
         raise to_http_exception(error) from error
 

@@ -330,11 +330,22 @@ Implementación actual:
 ### Slice D — Cálculo de movimiento de banderas
 
 Implementar endpoint calculado y UI para:
-- Piso.
-- Bajada.
-- Subida.
-- Movimiento recomendado.
-- Dentro/fuera de tolerancia.
+- [x] Piso.
+- [x] Bajada.
+- [x] Subida.
+- [x] Movimiento recomendado.
+- [x] Dentro/fuera de tolerancia.
+- [x] Datos parciales y faltantes.
+- [x] Tarjeta compacta en dashboard operacional.
+
+Implementación actual:
+- Endpoint read-only: `GET /api/v1/test-runs/{test_run_id}/flag-adjustment-recommendations`.
+- Solo usa pisos servidos y requeridos para nivelación.
+- La recomendación completa requiere medición final bajando y subiendo.
+- Si ambas medidas están dentro de ±5 mm, recomienda `0`.
+- Si alguna queda fuera de tolerancia, recomienda `-average(down_final_mm, up_final_mm)` redondeado a 0.5 mm.
+- Signo positivo significa mover bandera hacia arriba; signo negativo significa moverla hacia abajo.
+- Las recomendaciones no se guardan como registros; se recalculan desde `LevelingMeasurement`.
 
 ### Slice E — FHM y validación final
 

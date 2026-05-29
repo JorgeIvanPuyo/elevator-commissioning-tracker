@@ -100,10 +100,12 @@ Project
 - [x] Enlazar el dashboard operacional a la matriz técnica de la última prueba.
 
 ### Slice D — Cálculo de movimiento de banderas
-- [ ] Calcular tabla por piso con bajada, subida y movimiento recomendado.
-- [ ] Mostrar dentro/fuera de tolerancia.
-- [ ] Recomendar movimiento `0` si subida y bajada están dentro de ±5 mm.
-- [ ] Usar signo positivo para mover bandera hacia arriba y negativo para moverla hacia abajo.
+- [x] Calcular tabla por piso con bajada, subida y movimiento recomendado.
+- [x] Mostrar dentro/fuera de tolerancia.
+- [x] Recomendar movimiento `0` si subida y bajada están dentro de ±5 mm.
+- [x] Usar signo positivo para mover bandera hacia arriba y negativo para moverla hacia abajo.
+- [x] Manejar datos parciales y faltantes explícitamente.
+- [x] Enlazar el dashboard operacional a recomendaciones de banderas de la última prueba.
 
 ### Slice E — FHM y validación final
 - [ ] Marcar FHM como completado.
@@ -124,13 +126,13 @@ Project
 
 ## 4. Próximos slices recomendados
 
-Próximo slice recomendado: **Slice D — Cálculo de movimiento de banderas**.
+Próximo slice recomendado: **Slice E — FHM y validación final**.
 
 Objetivo del slice:
-- Calcular tabla por piso con mediciones de bajada/subida.
-- Recomendar movimiento físico de bandera con tolerancia ±5 mm.
-- Mostrar signo positivo para mover bandera hacia arriba y negativo hacia abajo.
-- Preparar el flujo para ejecutar FHM después del ajuste físico.
+- Marcar ejecución FHM como completada dentro del workflow.
+- Registrar o distinguir medición final posterior al movimiento de banderas.
+- Mostrar porcentaje de pisos dentro de tolerancia final.
+- Cerrar el ciclo operativo de ajuste físico y validación.
 
 Pasos base iniciales:
 
@@ -362,3 +364,15 @@ Pasos base iniciales:
 - El dashboard operacional de elevador agrega una tarjeta compacta de parámetros de nivelación fina con enlace a la matriz de la última prueba.
 - No hubo migración ni cambios de backend en este slice.
 - Siguiente slice recomendado: **Slice D — Cálculo de movimiento de banderas**.
+
+### Notas de Slice D — Cálculo de movimiento de banderas
+- Se agregó `GET /api/v1/test-runs/{test_run_id}/flag-adjustment-recommendations`.
+- El cálculo usa pisos servidos y requeridos para nivelación, ordenados por `ElevatorFloor.sort_order`.
+- Para cada piso se toma la última medición final de bajada y subida.
+- Si ambas direcciones están dentro de ±5 mm, recomienda `0`.
+- Si alguna dirección queda fuera de tolerancia, calcula `recommended_flag_movement_mm = -average(down_final_mm, up_final_mm)` y redondea a 0.5 mm.
+- Los estados `partial_data` y `missing_data` permiten trabajar con mediciones incompletas sin romper la vista.
+- El detalle de `TestRun` muestra el panel **Recomendación de movimiento de banderas**.
+- El dashboard operacional de elevador agrega una tarjeta **Banderas** con enlace a recomendaciones de la última prueba.
+- No hubo migración; las recomendaciones son read-only y derivadas de `LevelingMeasurement`.
+- Siguiente slice recomendado: **Slice E — FHM y validación final**.

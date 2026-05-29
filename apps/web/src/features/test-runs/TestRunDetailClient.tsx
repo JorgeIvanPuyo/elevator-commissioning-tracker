@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api";
 import { fromDatetimeLocalValue, previewHexDecimal, toDatetimeLocalValue } from "@/lib/hex";
+import { FlagAdjustmentRecommendationsPanel } from "@/features/test-runs/FlagAdjustmentRecommendationsPanel";
 import { LevelingMeasurementEditor } from "@/features/test-runs/LevelingMeasurementEditor";
 import { LevelingSummaryPanel } from "@/features/test-runs/LevelingSummaryPanel";
 import { TechnicalParameterMatrix } from "@/features/test-runs/TechnicalParameterMatrix";
@@ -14,6 +15,7 @@ import { ZoneLevelingAnalysisPanel } from "@/features/test-runs/ZoneLevelingAnal
 import type {
   ComparisonCandidate,
   Elevator,
+  FlagAdjustmentRecommendations,
   LevelingSummary,
   ParameterDefinition,
   ParameterValidationWarning,
@@ -50,6 +52,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
   const [processSteps, setProcessSteps] = useState<TestRunProcessStep[]>([]);
   const [levelingSummary, setLevelingSummary] = useState<LevelingSummary | null>(null);
   const [zoneLevelingAnalysis, setZoneLevelingAnalysis] = useState<ZoneLevelingAnalysis | null>(null);
+  const [flagAdjustmentRecommendations, setFlagAdjustmentRecommendations] = useState<FlagAdjustmentRecommendations | null>(null);
   const [comparisonCandidates, setComparisonCandidates] = useState<ComparisonCandidate[]>([]);
   const [parameterWarnings, setParameterWarnings] = useState<ParameterValidationWarning[]>([]);
   const [draft, setDraft] = useState<DraftByCode>({});
@@ -75,6 +78,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
         processStepResponse,
         levelingSummaryResponse,
         zoneLevelingAnalysisResponse,
+        flagAdjustmentResponse,
         comparisonCandidateResponse,
       ] = await Promise.all([
         api.getTestRun(testRunId),
@@ -84,6 +88,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
         api.listTestRunProcessSteps(testRunId),
         api.getLevelingSummary(testRunId),
         api.getZoneLevelingAnalysis(testRunId),
+        api.getFlagAdjustmentRecommendations(testRunId),
         api.listComparisonCandidates(testRunId),
       ]);
       const elevatorResponse = await api.getElevator(runResponse.elevator_id);
@@ -95,6 +100,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
       setProcessSteps(processStepResponse);
       setLevelingSummary(levelingSummaryResponse);
       setZoneLevelingAnalysis(zoneLevelingAnalysisResponse);
+      setFlagAdjustmentRecommendations(flagAdjustmentResponse);
       setComparisonCandidates(comparisonCandidateResponse);
       setTestTypes(typeResponse);
     } catch (loadError) {
@@ -110,9 +116,14 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
 
   async function refreshLevelingSummary() {
     try {
-      const [summaryResponse, zoneAnalysisResponse] = await Promise.all([api.getLevelingSummary(testRunId), api.getZoneLevelingAnalysis(testRunId)]);
+      const [summaryResponse, zoneAnalysisResponse, flagAdjustmentResponse] = await Promise.all([
+        api.getLevelingSummary(testRunId),
+        api.getZoneLevelingAnalysis(testRunId),
+        api.getFlagAdjustmentRecommendations(testRunId),
+      ]);
       setLevelingSummary(summaryResponse);
       setZoneLevelingAnalysis(zoneAnalysisResponse);
+      setFlagAdjustmentRecommendations(flagAdjustmentResponse);
     } catch (summaryError) {
       setError(summaryError instanceof Error ? summaryError.message : "No se pudo actualizar el resumen de nivelación");
     }
@@ -411,6 +422,8 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
           </div>
 
           <LevelingSummaryPanel summary={levelingSummary} />
+
+          <FlagAdjustmentRecommendationsPanel recommendations={flagAdjustmentRecommendations} />
 
           <ZoneLevelingAnalysisPanel analysis={zoneLevelingAnalysis} />
 
