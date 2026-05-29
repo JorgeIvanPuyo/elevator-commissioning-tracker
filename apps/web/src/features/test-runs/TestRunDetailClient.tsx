@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api";
 import { fromDatetimeLocalValue, previewHexDecimal, toDatetimeLocalValue } from "@/lib/hex";
 import { FlagAdjustmentRecommendationsPanel } from "@/features/test-runs/FlagAdjustmentRecommendationsPanel";
+import { FinalValidationPanel } from "@/features/test-runs/FinalValidationPanel";
 import { LevelingMeasurementEditor } from "@/features/test-runs/LevelingMeasurementEditor";
 import { LevelingSummaryPanel } from "@/features/test-runs/LevelingSummaryPanel";
 import { TechnicalParameterMatrix } from "@/features/test-runs/TechnicalParameterMatrix";
@@ -16,6 +17,7 @@ import type {
   ComparisonCandidate,
   Elevator,
   FlagAdjustmentRecommendations,
+  FinalValidationSummary,
   LevelingSummary,
   ParameterDefinition,
   ParameterValidationWarning,
@@ -53,6 +55,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
   const [levelingSummary, setLevelingSummary] = useState<LevelingSummary | null>(null);
   const [zoneLevelingAnalysis, setZoneLevelingAnalysis] = useState<ZoneLevelingAnalysis | null>(null);
   const [flagAdjustmentRecommendations, setFlagAdjustmentRecommendations] = useState<FlagAdjustmentRecommendations | null>(null);
+  const [finalValidationSummary, setFinalValidationSummary] = useState<FinalValidationSummary | null>(null);
   const [comparisonCandidates, setComparisonCandidates] = useState<ComparisonCandidate[]>([]);
   const [parameterWarnings, setParameterWarnings] = useState<ParameterValidationWarning[]>([]);
   const [draft, setDraft] = useState<DraftByCode>({});
@@ -79,6 +82,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
         levelingSummaryResponse,
         zoneLevelingAnalysisResponse,
         flagAdjustmentResponse,
+        finalValidationResponse,
         comparisonCandidateResponse,
       ] = await Promise.all([
         api.getTestRun(testRunId),
@@ -89,6 +93,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
         api.getLevelingSummary(testRunId),
         api.getZoneLevelingAnalysis(testRunId),
         api.getFlagAdjustmentRecommendations(testRunId),
+        api.getFinalValidationSummary(testRunId),
         api.listComparisonCandidates(testRunId),
       ]);
       const elevatorResponse = await api.getElevator(runResponse.elevator_id);
@@ -101,6 +106,7 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
       setLevelingSummary(levelingSummaryResponse);
       setZoneLevelingAnalysis(zoneLevelingAnalysisResponse);
       setFlagAdjustmentRecommendations(flagAdjustmentResponse);
+      setFinalValidationSummary(finalValidationResponse);
       setComparisonCandidates(comparisonCandidateResponse);
       setTestTypes(typeResponse);
     } catch (loadError) {
@@ -116,14 +122,16 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
 
   async function refreshLevelingSummary() {
     try {
-      const [summaryResponse, zoneAnalysisResponse, flagAdjustmentResponse] = await Promise.all([
+      const [summaryResponse, zoneAnalysisResponse, flagAdjustmentResponse, finalValidationResponse] = await Promise.all([
         api.getLevelingSummary(testRunId),
         api.getZoneLevelingAnalysis(testRunId),
         api.getFlagAdjustmentRecommendations(testRunId),
+        api.getFinalValidationSummary(testRunId),
       ]);
       setLevelingSummary(summaryResponse);
       setZoneLevelingAnalysis(zoneAnalysisResponse);
       setFlagAdjustmentRecommendations(flagAdjustmentResponse);
+      setFinalValidationSummary(finalValidationResponse);
     } catch (summaryError) {
       setError(summaryError instanceof Error ? summaryError.message : "No se pudo actualizar el resumen de nivelación");
     }
@@ -425,11 +433,17 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
 
           <FlagAdjustmentRecommendationsPanel recommendations={flagAdjustmentRecommendations} />
 
+          <FinalValidationPanel summary={finalValidationSummary} />
+
           <ZoneLevelingAnalysisPanel analysis={zoneLevelingAnalysis} />
 
           <TestRunComparisonPanel candidates={comparisonCandidates} testRunId={testRun.id} />
 
-          <LevelingMeasurementEditor onMeasurementsChanged={refreshLevelingSummary} testRun={testRun} />
+          <LevelingMeasurementEditor measurementStage="floor_by_floor" onMeasurementsChanged={refreshLevelingSummary} testRun={testRun} />
+
+          <div id="final-validation-measurements">
+            <LevelingMeasurementEditor measurementStage="final_validation" onMeasurementsChanged={refreshLevelingSummary} testRun={testRun} title="Mediciones de validación final" />
+          </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link className="inline-flex border border-field-line bg-white px-4 py-3 text-sm font-semibold" href={`/elevators/${testRun.elevator_id}`}>

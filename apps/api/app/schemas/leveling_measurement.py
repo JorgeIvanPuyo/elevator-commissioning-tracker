@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 MeasurementDirection = Literal["up", "down"]
 MeasurementTravelType = Literal["short", "long"]
+MeasurementStage = Literal["zone_tuning", "floor_by_floor", "final_validation"]
 
 
 class LevelingMeasurementBulkItem(BaseModel):
@@ -13,6 +14,7 @@ class LevelingMeasurementBulkItem(BaseModel):
     destination_floor_id: UUID
     direction: MeasurementDirection
     travel_type: MeasurementTravelType
+    measurement_stage: MeasurementStage = "floor_by_floor"
     landing_mm: int | None = None
     final_mm: int | None = None
     notes: str | None = None
@@ -29,6 +31,7 @@ class LevelingMeasurementRead(BaseModel):
     destination_floor_id: UUID
     direction: str
     travel_type: str
+    measurement_stage: str
     landing_mm: int | None
     final_mm: int | None
     did_relevel: bool

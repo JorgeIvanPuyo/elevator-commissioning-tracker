@@ -69,3 +69,4 @@ docker-compose run --rm --build api alembic upgrade head
 - `GET /api/v1/test-runs/{test_run_id}/leveling-summary`
 - `GET /api/v1/test-runs/{test_run_id}/zone-leveling-analysis`
 - `GET /api/v1/test-runs/{test_run_id}/flag-adjustment-recommendations`
+- `GET /api/v1/test-runs/{test_run_id}/final-validation-summary`

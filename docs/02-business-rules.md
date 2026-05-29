@@ -130,6 +130,19 @@ recommended_flag_movement_mm = -average_final
 - Signo negativo significa mover bandera hacia abajo.
 - Las recomendaciones no se persisten como registros; se calculan desde las mediciones actuales.
 
+### FHM y validación final
+Después de mover banderas:
+- El técnico debe ejecutar FHM para que el controlador almacene las nuevas referencias/alturas de piso.
+- FHM se registra con el paso de workflow `FHM_RUN`; no requiere una tabla específica en el MVP.
+- Las mediciones posteriores a FHM se guardan con `measurement_stage = final_validation`.
+- Las mediciones existentes que no envían etapa quedan como `floor_by_floor`.
+- El resumen de validación final solo usa mediciones `final_validation`.
+- Un piso queda `ok` si tiene bajada y subida finales dentro de ±5 mm.
+- Un piso queda `out_of_tolerance` si tiene bajada y subida finales pero alguna está fuera de ±5 mm.
+- Un piso queda `partial_data` si falta una dirección.
+- Un piso queda `missing_data` si no tiene medición final usable.
+- Si FHM no está completado, la UI debe advertirlo pero no bloquear captura.
+
 ### Comparación entre iteraciones
 - Una prueba solo puede compararse contra otra prueba del mismo elevador.
 - Una métrica mejora si aumenta cuando “más alto es mejor” o disminuye cuando “más bajo es mejor”, como pisos críticos.

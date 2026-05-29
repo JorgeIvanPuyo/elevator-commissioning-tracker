@@ -11,8 +11,10 @@ import type {
   ElevatorOperationalDashboard,
   ElevatorListItem,
   FlagAdjustmentRecommendations,
+  FinalValidationSummary,
   ComparisonCandidate,
   LevelingDirection,
+  LevelingMeasurementStage,
   LevelingMeasurementBulkItem,
   LevelingMeasurementBulkResponse,
   LevelingSummary,
@@ -138,13 +140,16 @@ export const api = {
   listTestRunProcessSteps: (testRunId: string) => request<TestRunProcessStep[]>(`/api/v1/test-runs/${testRunId}/process-steps`),
   updateTestRunProcessStep: (processStepId: string, payload: TestRunProcessStepUpdate) =>
     request<TestRunProcessStep>(`/api/v1/test-run-process-steps/${processStepId}`, { method: "PATCH", body: payload }),
-  listLevelingMeasurements: (testRunId: string, direction?: LevelingDirection, travelType?: LevelingTravelType) => {
+  listLevelingMeasurements: (testRunId: string, direction?: LevelingDirection, travelType?: LevelingTravelType, measurementStage?: LevelingMeasurementStage) => {
     const params = new URLSearchParams();
     if (direction) {
       params.set("direction", direction);
     }
     if (travelType) {
       params.set("travel_type", travelType);
+    }
+    if (measurementStage) {
+      params.set("measurement_stage", measurementStage);
     }
     const query = params.toString();
     return request<LevelingMeasurementBulkResponse>(`/api/v1/test-runs/${testRunId}/leveling-measurements${query ? `?${query}` : ""}`);
@@ -159,6 +164,7 @@ export const api = {
   getZoneLevelingAnalysis: (testRunId: string) => request<ZoneLevelingAnalysis>(`/api/v1/test-runs/${testRunId}/zone-leveling-analysis`),
   getFlagAdjustmentRecommendations: (testRunId: string) =>
     request<FlagAdjustmentRecommendations>(`/api/v1/test-runs/${testRunId}/flag-adjustment-recommendations`),
+  getFinalValidationSummary: (testRunId: string) => request<FinalValidationSummary>(`/api/v1/test-runs/${testRunId}/final-validation-summary`),
   listComparisonCandidates: (testRunId: string) => request<ComparisonCandidate[]>(`/api/v1/test-runs/${testRunId}/comparison-candidates`),
   compareTestRuns: (testRunId: string, baselineTestRunId: string) =>
     request<TestRunComparison>(`/api/v1/test-runs/${testRunId}/comparison?baseline_test_run_id=${baselineTestRunId}`),

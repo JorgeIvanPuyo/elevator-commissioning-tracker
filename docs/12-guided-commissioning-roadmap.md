@@ -350,9 +350,19 @@ Implementación actual:
 ### Slice E — FHM y validación final
 
 Implementar flujo para:
-- Marcar FHM como completado.
-- Registrar medición final.
-- Mostrar porcentaje de pisos dentro de tolerancia.
+- [x] Marcar FHM como completado.
+- [x] Registrar medición final.
+- [x] Mostrar porcentaje de pisos dentro de tolerancia.
+- [x] Separar mediciones finales con `measurement_stage = final_validation`.
+- [x] Advertir si FHM no está completado sin bloquear captura.
+- [x] Mostrar estado compacto en dashboard operacional.
+
+Implementación actual:
+- FHM se rastrea con el paso de workflow `FHM_RUN`.
+- Las mediciones existentes mantienen `measurement_stage = floor_by_floor`.
+- La validación posterior a FHM usa `measurement_stage = final_validation`.
+- Endpoint read-only: `GET /api/v1/test-runs/{test_run_id}/final-validation-summary`.
+- El resumen retorna KPIs por pisos requeridos, estados por piso, porcentaje de completitud, porcentaje dentro de tolerancia y estado FHM.
 
 ### Slice F — Evidencias mínimas por paso
 

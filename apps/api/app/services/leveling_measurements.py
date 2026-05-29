@@ -15,12 +15,15 @@ async def list_leveling_measurements(
     offset: int,
     direction: str | None = None,
     travel_type: str | None = None,
+    measurement_stage: str | None = None,
 ) -> dict:
     await _get_test_run(session, test_run_id)
     if direction is not None:
         _validate_direction(direction)
     if travel_type is not None:
         _validate_travel_type(travel_type)
+    if measurement_stage is not None:
+        _validate_measurement_stage(measurement_stage)
 
     query = (
         select(LevelingMeasurement)
@@ -33,6 +36,8 @@ async def list_leveling_measurements(
         query = query.where(LevelingMeasurement.direction == direction)
     if travel_type is not None:
         query = query.where(LevelingMeasurement.travel_type == travel_type)
+    if measurement_stage is not None:
+        query = query.where(LevelingMeasurement.measurement_stage == measurement_stage)
 
     items = list(await session.scalars(query))
     return {"items": items, "summary": _build_summary(items)}
@@ -65,6 +70,7 @@ async def bulk_upsert_leveling_measurements(
                 destination_floor_id=destination_floor.id,
                 direction=item.direction,
                 travel_type=item.travel_type,
+                measurement_stage=item.measurement_stage,
                 **values,
             )
             session.add(measurement)
@@ -125,7 +131,7 @@ async def _get_floors_for_test_run(
 async def _get_existing_measurements_by_key(
     session: AsyncSession,
     test_run_id: UUID,
-) -> dict[tuple[UUID, UUID, UUID, str, str], LevelingMeasurement]:
+) -> dict[tuple[UUID, UUID, UUID, str, str, str], LevelingMeasurement]:
     result = await session.scalars(select(LevelingMeasurement).where(LevelingMeasurement.test_run_id == test_run_id))
     return {
         (
@@ -134,6 +140,7 @@ async def _get_existing_measurements_by_key(
             measurement.destination_floor_id,
             measurement.direction,
             measurement.travel_type,
+            measurement.measurement_stage,
         ): measurement
         for measurement in result
     }
@@ -155,12 +162,12 @@ def _validate_measurement_routes(items: list[LevelingMeasurementBulkItem], floor
             raise AppError("Destination floor must require leveling")
 
 
-def _item_key(item: LevelingMeasurementBulkItem) -> tuple[UUID, UUID, str, str]:
-    return (item.origin_floor_id, item.destination_floor_id, item.direction, item.travel_type)
+def _item_key(item: LevelingMeasurementBulkItem) -> tuple[UUID, UUID, str, str, str]:
+    return (item.origin_floor_id, item.destination_floor_id, item.direction, item.travel_type, item.measurement_stage)
 
 
-def _measurement_key(test_run_id: UUID, item: LevelingMeasurementBulkItem) -> tuple[UUID, UUID, UUID, str, str]:
-    return (test_run_id, item.origin_floor_id, item.destination_floor_id, item.direction, item.travel_type)
+def _measurement_key(test_run_id: UUID, item: LevelingMeasurementBulkItem) -> tuple[UUID, UUID, UUID, str, str, str]:
+    return (test_run_id, item.origin_floor_id, item.destination_floor_id, item.direction, item.travel_type, item.measurement_stage)
 
 
 def _calculated_values(item: LevelingMeasurementBulkItem) -> dict:
@@ -204,3 +211,8 @@ def _validate_direction(direction: str) -> None:
 def _validate_travel_type(travel_type: str) -> None:
     if travel_type not in {"short", "long"}:
         raise AppError("Invalid leveling measurement travel_type")
+
+
+def _validate_measurement_stage(measurement_stage: str) -> None:
+    if measurement_stage not in {"zone_tuning", "floor_by_floor", "final_validation"}:
+        raise AppError("Invalid leveling measurement_stage")

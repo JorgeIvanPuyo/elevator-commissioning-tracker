@@ -129,6 +129,14 @@ El detalle de prueba debe mostrar una tabla de recomendaciones de movimiento de 
 - Valores positivos en azul y negativos en naranja, siguiendo la convención técnica de medidas.
 - La tabla es read-only; el movimiento se calcula desde mediciones finales actuales.
 
+El detalle de prueba debe mostrar un panel de FHM y validación final:
+- Estado FHM desde el paso de workflow `FHM_RUN`.
+- Warning no bloqueante si FHM no está completado.
+- KPIs compactos de validación final: dentro de tolerancia, fuera de tolerancia, datos incompletos, sin datos y porcentaje dentro de tolerancia.
+- Tabla por piso con bajada final, subida final y estado.
+- Reutilizar el editor de mediciones con `measurementStage = final_validation`.
+- Las mediciones piso a piso normales deben seguir usando `measurementStage = floor_by_floor`.
+
 El detalle de prueba debe permitir comparar la prueba actual contra otra iteración del mismo elevador:
 - Selector de baseline con candidatos disponibles.
 - Cards comparativas para cobertura, tolerancia final, renivelación, histerisis y pisos críticos.

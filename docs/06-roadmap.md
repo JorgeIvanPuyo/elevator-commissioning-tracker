@@ -108,9 +108,12 @@ Project
 - [x] Enlazar el dashboard operacional a recomendaciones de banderas de la última prueba.
 
 ### Slice E — FHM y validación final
-- [ ] Marcar FHM como completado.
-- [ ] Registrar medición final.
-- [ ] Mostrar porcentaje de pisos dentro de tolerancia.
+- [x] Marcar FHM como completado.
+- [x] Registrar medición final.
+- [x] Mostrar porcentaje de pisos dentro de tolerancia.
+- [x] Separar mediciones por `measurement_stage`.
+- [x] Mostrar warning no bloqueante si FHM no está completado.
+- [x] Enlazar dashboard operacional a validación final.
 
 ### Slice F — Evidencias mínimas por paso
 - [ ] Cargar fotos/videos por paso crítico.
@@ -126,13 +129,13 @@ Project
 
 ## 4. Próximos slices recomendados
 
-Próximo slice recomendado: **Slice E — FHM y validación final**.
+Próximo slice recomendado: **Slice G — Report-ready commissioning overview by elevator**.
 
 Objetivo del slice:
-- Marcar ejecución FHM como completada dentro del workflow.
-- Registrar o distinguir medición final posterior al movimiento de banderas.
-- Mostrar porcentaje de pisos dentro de tolerancia final.
-- Cerrar el ciclo operativo de ajuste físico y validación.
+- Ensamblar pasos completados, parámetros finales, análisis por zonas, banderas, FHM y validación final en una vista por elevador.
+- Preparar la estructura visual y de datos para un reporte final antes de PDF.
+- Mantener evidencias como placeholder hasta que el campo lo necesite.
+- Reducir navegación para cierre técnico de cada elevador.
 
 Pasos base iniciales:
 
@@ -376,3 +379,13 @@ Pasos base iniciales:
 - El dashboard operacional de elevador agrega una tarjeta **Banderas** con enlace a recomendaciones de la última prueba.
 - No hubo migración; las recomendaciones son read-only y derivadas de `LevelingMeasurement`.
 - Siguiente slice recomendado: **Slice E — FHM y validación final**.
+
+### Notas de Slice E — FHM y validación final
+- Se agregó `measurement_stage` a `LevelingMeasurement` con default `floor_by_floor`.
+- La migración `0007_measure_stage` actualiza el constraint único para permitir la misma ruta en etapas diferentes.
+- El bulk de mediciones acepta `zone_tuning`, `floor_by_floor` y `final_validation`.
+- Se agregó `GET /api/v1/test-runs/{test_run_id}/final-validation-summary`.
+- El resumen final usa únicamente mediciones `final_validation` y expone estado FHM desde `CommissioningStep` `FHM_RUN`.
+- El detalle de `TestRun` muestra el panel **Validación final de nivelación** y reutiliza el editor de mediciones para capturar validación final.
+- El dashboard operacional agrega tarjeta **Validación final** con FHM, porcentaje dentro de tolerancia y enlace.
+- Siguiente slice recomendado: **Slice G — Report-ready commissioning overview by elevator**.

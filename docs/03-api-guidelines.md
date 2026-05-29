@@ -105,9 +105,13 @@ El endpoint initialize es idempotente: crea el workflow y los 10 pasos base si n
 - `PUT /test-runs/{test_run_id}/leveling-measurements/bulk`
 - `DELETE /leveling-measurements/{measurement_id}`
 - `GET /test-runs/{test_run_id}/leveling-summary`
+- `GET /test-runs/{test_run_id}/zone-leveling-analysis`
+- `GET /test-runs/{test_run_id}/flag-adjustment-recommendations`
+- `GET /test-runs/{test_run_id}/final-validation-summary`
 
 El bulk de mediciones calcula en backend `effective_final_mm`, `is_final_within_tolerance` y `did_relevel`. El payload no debe depender de una bandera manual de renivelación.
 El resumen de nivelación es read-only y retorna KPIs agregados, estados y detalle por piso.
+`measurement_stage` es opcional en el bulk; si no se envía, se usa `floor_by_floor`. La etapa `final_validation` separa las mediciones tomadas después de FHM.
 La comparación entre pruebas es read-only y solo permite comparar `TestRun` del mismo elevador.
 
 ### Evidence

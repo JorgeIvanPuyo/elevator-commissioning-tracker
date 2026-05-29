@@ -8,6 +8,7 @@ import type {
   LevelingDirection,
   LevelingMeasurement,
   LevelingMeasurementBulkItem,
+  LevelingMeasurementStage,
   LevelingMeasurementSummary,
   LevelingTravelType,
   TestRun,
@@ -81,7 +82,17 @@ function emptyMeasurementForm(): MeasurementForm {
   };
 }
 
-export function LevelingMeasurementEditor({ testRun, onMeasurementsChanged }: { testRun: TestRun; onMeasurementsChanged?: () => void | Promise<void> }) {
+export function LevelingMeasurementEditor({
+  measurementStage = "floor_by_floor",
+  onMeasurementsChanged,
+  testRun,
+  title = "Mediciones de nivelación",
+}: {
+  measurementStage?: LevelingMeasurementStage;
+  onMeasurementsChanged?: () => void | Promise<void>;
+  testRun: TestRun;
+  title?: string;
+}) {
   const [floors, setFloors] = useState<ElevatorFloor[]>([]);
   const [draftGroups, setDraftGroups] = useState<DraftGroups>(emptyDraftGroups);
   const [formByGroup, setFormByGroup] = useState<FormsByGroup>(emptyFormsByGroup);
@@ -98,7 +109,7 @@ export function LevelingMeasurementEditor({ testRun, onMeasurementsChanged }: { 
   const sortedFloors = useMemo(() => [...floors].sort((a, b) => a.sort_order - b.sort_order), [floors]);
   const destinationFloors = useMemo(() => sortedFloors.filter((floor) => floor.is_leveling_required), [sortedFloors]);
   const floorLabelById = useMemo(() => new Map(sortedFloors.map((floor) => [floor.id, floorLabel(floor)])), [sortedFloors]);
-  const draftKey = `elevator-commissioning:test-run:${testRun.id}:leveling-groups-draft`;
+  const draftKey = `elevator-commissioning:test-run:${testRun.id}:leveling-groups-draft:${measurementStage}`;
   const visibleSummary = useMemo(() => buildSummaryFromDraft(draftGroups), [draftGroups]);
   const summary = visibleSummary.total > 0 || hasLocalDraft ? visibleSummary : serverSummary;
 
@@ -109,7 +120,7 @@ export function LevelingMeasurementEditor({ testRun, onMeasurementsChanged }: { 
       try {
         const [floorResponse, measurementResponse] = await Promise.all([
           api.listElevatorFloors(testRun.elevator_id),
-          api.listLevelingMeasurements(testRun.id),
+          api.listLevelingMeasurements(testRun.id, undefined, undefined, measurementStage),
         ]);
         const sorted = [...floorResponse].sort((a, b) => a.sort_order - b.sort_order);
         setFloors(sorted);
@@ -136,7 +147,7 @@ export function LevelingMeasurementEditor({ testRun, onMeasurementsChanged }: { 
     }
 
     void load();
-  }, [testRun.id, testRun.elevator_id, draftKey]);
+  }, [testRun.id, testRun.elevator_id, draftKey, measurementStage]);
 
   function updateGroupForm(groupKey: GroupKey, patch: Partial<MeasurementForm>) {
     setSuccessMessage(null);
@@ -224,6 +235,7 @@ export function LevelingMeasurementEditor({ testRun, onMeasurementsChanged }: { 
         destination_floor_id: row.destination_floor_id,
         direction: group.direction,
         travel_type: group.travel_type,
+        measurement_stage: measurementStage,
         landing_mm: parseIntegerOrNull(row.landing_mm),
         final_mm: parseIntegerOrNull(row.final_mm),
         notes: row.notes.trim() || null,
@@ -249,7 +261,7 @@ export function LevelingMeasurementEditor({ testRun, onMeasurementsChanged }: { 
     <div className="mt-6 border border-field-line bg-white shadow-panel">
       <div className="flex flex-col gap-3 border-b border-field-line p-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Mediciones de nivelación</h3>
+          <h3 className="text-lg font-semibold">{title}</h3>
           <p className="mt-1 text-sm text-field-muted">Piso a piso en mm. Positivo: cabina alta. Negativo: cabina baja.</p>
         </div>
         <button className="bg-field-info px-4 py-3 text-sm font-semibold text-white hover:bg-field-ink disabled:opacity-60" disabled={isSaving} onClick={saveMeasurements}>

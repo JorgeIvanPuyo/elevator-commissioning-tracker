@@ -7,10 +7,12 @@ from app.api.v1.dependencies import to_http_exception
 from app.core.exceptions import AppError
 from app.db.session import get_db_session
 from app.schemas.flag_adjustment import FlagAdjustmentRecommendationsRead
+from app.schemas.final_validation import FinalValidationSummaryRead
 from app.schemas.leveling_measurement import LevelingMeasurementBulkRequest, LevelingMeasurementBulkResponse
 from app.schemas.leveling_summary import LevelingSummaryRead
 from app.schemas.zone_leveling import ZoneLevelingAnalysisRead
 from app.services import flag_adjustments as flag_adjustment_service
+from app.services import final_validation as final_validation_service
 from app.services import leveling_measurements as leveling_measurement_service
 from app.services import leveling_summary as leveling_summary_service
 from app.services import zone_leveling as zone_leveling_service
@@ -23,6 +25,7 @@ async def list_leveling_measurements(
     test_run_id: UUID,
     direction: str | None = None,
     travel_type: str | None = None,
+    measurement_stage: str | None = None,
     limit: int = Query(default=300, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db_session),
@@ -35,6 +38,7 @@ async def list_leveling_measurements(
             offset=offset,
             direction=direction,
             travel_type=travel_type,
+            measurement_stage=measurement_stage,
         )
     except AppError as error:
         raise to_http_exception(error) from error
@@ -81,6 +85,17 @@ async def get_flag_adjustment_recommendations(
 ) -> FlagAdjustmentRecommendationsRead:
     try:
         return await flag_adjustment_service.get_flag_adjustment_recommendations(session, test_run_id)
+    except AppError as error:
+        raise to_http_exception(error) from error
+
+
+@router.get("/test-runs/{test_run_id}/final-validation-summary", response_model=FinalValidationSummaryRead)
+async def get_final_validation_summary(
+    test_run_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+) -> FinalValidationSummaryRead:
+    try:
+        return await final_validation_service.get_final_validation_summary(session, test_run_id)
     except AppError as error:
         raise to_http_exception(error) from error
 

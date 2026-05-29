@@ -193,6 +193,7 @@ Campos:
 - `destination_floor_id`
 - `travel_type` (`short`, `long`)
 - `direction` (`up`, `down`)
+- `measurement_stage` (`zone_tuning`, `floor_by_floor`, `final_validation`)
 - `landing_mm` valor inicial al aterrizar. Positivo = cabina alta. Negativo = cabina baja.
 - `final_mm` valor final luego de renivelación. Positivo = cabina alta. Negativo = cabina baja.
 - `did_relevel` calculado por backend como `true` solo cuando `final_mm` existe y es distinto de `landing_mm`.
@@ -204,10 +205,11 @@ Reglas:
 - `origin_floor_id` y `destination_floor_id` deben pertenecer al mismo elevador del `TestRun`.
 - `origin_floor_id` y `destination_floor_id` deben ser diferentes.
 - `destination_floor_id` debe corresponder a un piso con `is_leveling_required = true`.
-- La combinación `test_run_id + origin_floor_id + destination_floor_id + direction + travel_type` es única.
+- La combinación `test_run_id + origin_floor_id + destination_floor_id + direction + travel_type + measurement_stage` es única.
+- Si `measurement_stage` no se envía, el valor por defecto es `floor_by_floor` para mantener compatibilidad con mediciones existentes.
 - La tolerancia inicial es ±5 mm sobre `effective_final_mm`.
 - El resumen técnico por `TestRun` calcula cobertura, tolerancia final, renivelación aceptable e histerisis inicial por piso.
-- La recomendación de bandera queda para slices posteriores.
+- La etapa `final_validation` se usa después de ejecutar FHM para validar el resultado final posterior al movimiento físico de banderas.
 
 ### LevelingSummary
 Resumen calculado y read-only de nivelación para una prueba.

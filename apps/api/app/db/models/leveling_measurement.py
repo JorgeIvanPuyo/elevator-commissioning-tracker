@@ -17,9 +17,11 @@ class LevelingMeasurement(Base):
             "destination_floor_id",
             "direction",
             "travel_type",
-            name="uq_leveling_measurements_run_route",
+            "measurement_stage",
+            name="uq_leveling_measurements_run_route_stage",
         ),
         Index("ix_leveling_measurements_run_direction_travel", "test_run_id", "direction", "travel_type"),
+        Index("ix_leveling_measurements_run_stage", "test_run_id", "measurement_stage"),
     )
 
     id: Mapped[UUID] = mapped_column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -40,6 +42,7 @@ class LevelingMeasurement(Base):
         nullable=False,
         index=True,
     )
+    measurement_stage: Mapped[str] = mapped_column(String(32), nullable=False, default="floor_by_floor")
     direction: Mapped[str] = mapped_column(String(16), nullable=False)
     travel_type: Mapped[str] = mapped_column(String(16), nullable=False)
     landing_mm: Mapped[int | None] = mapped_column(Integer)

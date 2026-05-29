@@ -216,6 +216,7 @@ export type TestRunProcessStepUpdate = {
 
 export type LevelingDirection = "up" | "down";
 export type LevelingTravelType = "short" | "long";
+export type LevelingMeasurementStage = "zone_tuning" | "floor_by_floor" | "final_validation";
 
 export type LevelingMeasurement = {
   id: string;
@@ -224,6 +225,7 @@ export type LevelingMeasurement = {
   destination_floor_id: string;
   direction: LevelingDirection;
   travel_type: LevelingTravelType;
+  measurement_stage: LevelingMeasurementStage;
   landing_mm: number | null;
   final_mm: number | null;
   did_relevel: boolean;
@@ -240,6 +242,7 @@ export type LevelingMeasurementBulkItem = {
   destination_floor_id: string;
   direction: LevelingDirection;
   travel_type: LevelingTravelType;
+  measurement_stage?: LevelingMeasurementStage;
   landing_mm?: number | null;
   final_mm?: number | null;
   notes?: string | null;
@@ -385,6 +388,40 @@ export type FlagAdjustmentRecommendations = {
   tolerance_mm: number;
   summary: FlagAdjustmentSummary;
   rows: FlagAdjustmentRow[];
+};
+
+export type FinalValidationStatus = "ok" | "out_of_tolerance" | "partial_data" | "missing_data" | "not_required";
+
+export type FinalValidationSummaryMetrics = {
+  total_required_floors: number;
+  floors_with_complete_data: number;
+  floors_within_tolerance: number;
+  floors_out_of_tolerance: number;
+  floors_missing_data: number;
+  floors_partial_data: number;
+  completion_percent: number;
+  within_tolerance_percent: number;
+  max_abs_final_mm: number | null;
+};
+
+export type FinalValidationRow = {
+  floor_id: string;
+  floor_label: string;
+  sort_order: number;
+  down_final_mm: number | null;
+  up_final_mm: number | null;
+  status: FinalValidationStatus;
+  within_tolerance: boolean | null;
+};
+
+export type FinalValidationSummary = {
+  test_run_id: string;
+  elevator_id: string;
+  tolerance_mm: number;
+  fhm_completed: boolean;
+  fhm_step_status: CommissioningStepStatus | null;
+  summary: FinalValidationSummaryMetrics;
+  rows: FinalValidationRow[];
 };
 
 export type ComparisonTrend = "improved" | "worsened" | "mixed" | "unchanged" | "not_comparable";

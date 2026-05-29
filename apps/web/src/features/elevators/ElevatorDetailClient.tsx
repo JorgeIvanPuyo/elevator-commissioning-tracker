@@ -14,6 +14,7 @@ import type {
   ElevatorFloor,
   ElevatorOperationalDashboard,
   FlagAdjustmentRecommendations,
+  FinalValidationSummary,
   OperationalParameterValue,
   TestRun,
   TestRunStatus,
@@ -52,6 +53,7 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
   const [workflow, setWorkflow] = useState<CommissioningWorkflow | null>(null);
   const [latestZoneAnalysis, setLatestZoneAnalysis] = useState<ZoneLevelingAnalysis | null>(null);
   const [latestFlagAdjustments, setLatestFlagAdjustments] = useState<FlagAdjustmentRecommendations | null>(null);
+  const [latestFinalValidation, setLatestFinalValidation] = useState<FinalValidationSummary | null>(null);
   const [floors, setFloors] = useState<ElevatorFloor[]>([]);
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [testTypes, setTestTypes] = useState<TestType[]>([]);
@@ -85,10 +87,14 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
       const latestFlagAdjustmentsResponse = dashboardResponse.quick_links.latest_test_run_id
         ? await api.getFlagAdjustmentRecommendations(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
         : null;
+      const latestFinalValidationResponse = dashboardResponse.quick_links.latest_test_run_id
+        ? await api.getFinalValidationSummary(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
+        : null;
       setDashboard(dashboardResponse);
       setWorkflow(workflowResponse);
       setLatestZoneAnalysis(latestZoneAnalysisResponse);
       setLatestFlagAdjustments(latestFlagAdjustmentsResponse);
+      setLatestFinalValidation(latestFinalValidationResponse);
       setFloors(floorResponse);
       setTestRuns(testRunResponse);
       setTestTypes(testTypeResponse);
@@ -141,9 +147,13 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
     const latestFlagAdjustmentsResponse = dashboardResponse.quick_links.latest_test_run_id
       ? await api.getFlagAdjustmentRecommendations(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
       : null;
+    const latestFinalValidationResponse = dashboardResponse.quick_links.latest_test_run_id
+      ? await api.getFinalValidationSummary(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
+      : null;
     setDashboard(dashboardResponse);
     setLatestZoneAnalysis(latestZoneAnalysisResponse);
     setLatestFlagAdjustments(latestFlagAdjustmentsResponse);
+    setLatestFinalValidation(latestFinalValidationResponse);
   }
 
   async function updateStep(step: CommissioningStep, status: CommissioningStepStatus) {
@@ -378,6 +388,26 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
                   </>
                 ) : (
                   <p className="border-t border-field-line p-3 text-sm text-field-muted">Crea mediciones finales de subida y bajada para calcular movimientos.</p>
+                )}
+              </section>
+
+              <section className="border border-field-line bg-white shadow-panel">
+                <PanelHeader title="Validación final" subtitle={latestFinalValidation ? `FHM: ${latestFinalValidation.fhm_completed ? "completado" : "pendiente"}` : "Sin validación final"} />
+                {latestFinalValidation ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-0 border-t border-field-line text-sm">
+                      <MetricCell label="Tolerancia" value={`${latestFinalValidation.summary.within_tolerance_percent}%`} />
+                      <MetricCell label="Fuera" value={String(latestFinalValidation.summary.floors_out_of_tolerance)} />
+                      <MetricCell label="Sin datos" value={String(latestFinalValidation.summary.floors_missing_data + latestFinalValidation.summary.floors_partial_data)} />
+                    </div>
+                    {dashboard.quick_links.latest_test_run_id ? (
+                      <Link className="block border-t border-field-line p-3 text-sm font-semibold text-field-info" href={`/test-runs/${dashboard.quick_links.latest_test_run_id}#final-validation`}>
+                        Ver validación final
+                      </Link>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="border-t border-field-line p-3 text-sm text-field-muted">Registra mediciones finales después de ejecutar FHM.</p>
                 )}
               </section>
 
