@@ -87,6 +87,16 @@ Cada campo HEX debe mostrar:
 Ejemplo:
 `273 = 60 (96)`
 
+El detalle de `TestRun` debe mostrar además una matriz técnica compacta para los bias de nivelación fina `026D`-`278`:
+- Zona baja/media/alta y dirección subida/bajada.
+- Pares MIN/MAX lado a lado.
+- Valor actual en HEX y decimal.
+- Ventana `MAX - MIN`.
+- Estado visual para `OK`, `MAX <= MIN`, ventana baja, ventana alta, valor faltante o HEX inválido.
+- Sugeridos de MIN/MAX provenientes del análisis por zonas cuando existan.
+
+La matriz es una vista operacional read-only. El editor de parámetros sigue siendo el punto de captura y guardado para conservar el borrador local y evitar guardados parciales inconsistentes.
+
 ## Procesos técnicos
 Los códigos A61E, A62E, A65E, A66E y A67E deben mostrarse como checklist de procesos ejecutados dentro de una prueba.
 No deben aparecer en el editor de parámetros HEX.

@@ -90,12 +90,14 @@ Project
 - [x] Mostrar explicación técnica editable/verificable por el técnico.
 
 ### Slice C — Tabla especializada de parámetros por zona
-- [ ] Mostrar zona baja/media/alta.
-- [ ] Mostrar up/down bias.
-- [ ] Mostrar MIN/MAX con HEX y decimal.
-- [ ] Calcular ventana `MAX - MIN`.
-- [ ] Warning no bloqueante si `MAX <= MIN`.
-- [ ] Warning no bloqueante si la ventana no está entre 4 y 6 unidades decimales.
+- [x] Mostrar zona baja/media/alta.
+- [x] Mostrar up/down bias.
+- [x] Mostrar MIN/MAX con HEX y decimal.
+- [x] Calcular ventana `MAX - MIN`.
+- [x] Warning no bloqueante si `MAX <= MIN`.
+- [x] Warning no bloqueante si la ventana no está entre 4 y 6 unidades decimales.
+- [x] Mostrar sugeridos desde el análisis por zonas cuando existan.
+- [x] Enlazar el dashboard operacional a la matriz técnica de la última prueba.
 
 ### Slice D — Cálculo de movimiento de banderas
 - [ ] Calcular tabla por piso con bajada, subida y movimiento recomendado.
@@ -122,13 +124,13 @@ Project
 
 ## 4. Próximos slices recomendados
 
-Próximo slice recomendado: **Slice C — Tabla especializada de parámetros por zona**.
+Próximo slice recomendado: **Slice D — Cálculo de movimiento de banderas**.
 
 Objetivo del slice:
-- Mostrar una matriz técnica compacta para parámetros 026D-278.
-- Separar low/mid/high, up/down bias y MIN/MAX.
-- Mostrar HEX, decimal, ventana `MAX - MIN` y warnings.
-- Preparar una experiencia parecida a la hoja técnica usada en campo.
+- Calcular tabla por piso con mediciones de bajada/subida.
+- Recomendar movimiento físico de bandera con tolerancia ±5 mm.
+- Mostrar signo positivo para mover bandera hacia arriba y negativo hacia abajo.
+- Preparar el flujo para ejecutar FHM después del ajuste físico.
 
 Pasos base iniciales:
 
@@ -350,3 +352,13 @@ Pasos base iniciales:
 - El dashboard operacional de elevador enlaza al análisis por zonas de la última prueba cuando existe.
 - No hubo migración en este slice; el cálculo es read-only.
 - Siguiente slice recomendado: **Slice C — Tabla especializada de parámetros por zona**.
+
+### Notas de Slice C — Tabla especializada de parámetros por zona
+- Se agregó una matriz técnica read-only en el detalle de `TestRun` para los parámetros 026D-278.
+- La matriz muestra zona, dirección, MIN/MAX, HEX, decimal, ventana `MAX - MIN`, estado y warnings visuales no bloqueantes.
+- La UI clasifica valores como `OK`, `MAX <= MIN`, ventana baja, ventana alta, faltantes o HEX inválido.
+- Los valores sugeridos vienen del endpoint de análisis por zonas; la matriz solo formatea y clasifica la ventana visible.
+- El editor existente de parámetros se conserva como punto de captura/guardado y mantiene el borrador local.
+- El dashboard operacional de elevador agrega una tarjeta compacta de parámetros de nivelación fina con enlace a la matriz de la última prueba.
+- No hubo migración ni cambios de backend en este slice.
+- Siguiente slice recomendado: **Slice D — Cálculo de movimiento de banderas**.

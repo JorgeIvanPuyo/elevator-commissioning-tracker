@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { fromDatetimeLocalValue, previewHexDecimal, toDatetimeLocalValue } from "@/lib/hex";
 import { LevelingMeasurementEditor } from "@/features/test-runs/LevelingMeasurementEditor";
 import { LevelingSummaryPanel } from "@/features/test-runs/LevelingSummaryPanel";
+import { TechnicalParameterMatrix } from "@/features/test-runs/TechnicalParameterMatrix";
 import { TestRunComparisonPanel } from "@/features/test-runs/TestRunComparisonPanel";
 import { ZoneLevelingAnalysisPanel } from "@/features/test-runs/ZoneLevelingAnalysisPanel";
 import type {
@@ -339,7 +340,9 @@ export function TestRunDetailClient({ testRunId }: { testRunId: string }) {
             </div>
           </div>
 
-          <div className="mt-6 border border-field-line bg-white shadow-panel">
+          <TechnicalParameterMatrix analysis={zoneLevelingAnalysis} draftValues={draft} />
+
+          <div className="mt-6 border border-field-line bg-white shadow-panel" id="parameter-editor">
             <div className="flex flex-col gap-3 border-b border-field-line p-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-lg font-semibold">Parámetros HEX</h3>

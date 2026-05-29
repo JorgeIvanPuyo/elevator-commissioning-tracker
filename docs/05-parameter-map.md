@@ -81,6 +81,24 @@ Warnings no bloqueantes:
 - Si faltan valores de parámetros, retornar status `missing_parameters`.
 - Si faltan mediciones, retornar status `missing_measurements`.
 
+## Technical Parameter Matrix UI
+
+Slice C agrega una matriz operacional en el detalle de `TestRun` para los parámetros `026D` a `278`.
+
+Reglas de visualización:
+- La matriz es read-only y no reemplaza al editor HEX.
+- Cada fila representa un par zona/dirección MIN/MAX.
+- Debe mostrar código, HEX, decimal, ventana actual y sugeridos desde el análisis por zonas.
+- La ventana se calcula como `max_decimal - min_decimal`.
+- `OK`: `MAX > MIN` y ventana entre 4 y 6 inclusive.
+- `WARN_MAX_NOT_GREATER`: `MAX <= MIN`.
+- `WARN_WINDOW_LOW`: `MAX > MIN` y ventana menor a 4.
+- `WARN_WINDOW_HIGH`: `MAX > MIN` y ventana mayor a 6.
+- `MISSING`: falta MIN o MAX.
+- `INVALID_HEX`: algún valor visible no puede convertirse a decimal.
+
+Estas advertencias son visuales y no bloquean el guardado. El técnico puede conservar valores raros cuando vienen del controlador, pero la UI debe hacerlos evidentes.
+
 ## Load Compensation A67E
 | Code |
 |---|

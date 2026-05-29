@@ -17,6 +17,7 @@ import type {
   TestRun,
   TestRunStatus,
   TestType,
+  ZoneLevelingAnalysis,
 } from "@/types/api";
 
 const testRunStatusLabels: Record<TestRunStatus, string> = {
@@ -48,6 +49,7 @@ const criticalParameterCodes = ["026D", "273", "026E", "274", "026F", "275", "27
 export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
   const [dashboard, setDashboard] = useState<ElevatorOperationalDashboard | null>(null);
   const [workflow, setWorkflow] = useState<CommissioningWorkflow | null>(null);
+  const [latestZoneAnalysis, setLatestZoneAnalysis] = useState<ZoneLevelingAnalysis | null>(null);
   const [floors, setFloors] = useState<ElevatorFloor[]>([]);
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [testTypes, setTestTypes] = useState<TestType[]>([]);
@@ -75,8 +77,12 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
         api.listElevatorTestRuns(elevatorId),
         api.listTestTypes(),
       ]);
+      const latestZoneAnalysisResponse = dashboardResponse.quick_links.latest_test_run_id
+        ? await api.getZoneLevelingAnalysis(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
+        : null;
       setDashboard(dashboardResponse);
       setWorkflow(workflowResponse);
+      setLatestZoneAnalysis(latestZoneAnalysisResponse);
       setFloors(floorResponse);
       setTestRuns(testRunResponse);
       setTestTypes(testTypeResponse);
@@ -98,6 +104,14 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
 
   const blockingStepsIncomplete = workflow?.steps.filter((step) => step.is_blocking && step.status !== "completed") ?? [];
   const loadPrerequisitesComplete = blockingStepsIncomplete.length === 0;
+  const fineLevelingParameterStatus = useMemo(() => {
+    const rows = latestZoneAnalysis?.zones ?? [];
+    const okCount = rows.filter((row) => row.status === "ok").length;
+    const warningCount = rows.filter((row) => row.status === "warning").length;
+    const missingCount = rows.filter((row) => row.status === "missing_measurements" || row.status === "missing_parameters").length;
+    const warning = rows.flatMap((row) => row.warnings).find((item) => item.severity === "critical") ?? rows.flatMap((row) => row.warnings)[0] ?? null;
+    return { missingCount, okCount, warningCount, warningMessage: warning?.message ?? null };
+  }, [latestZoneAnalysis]);
 
   async function initializeWorkflow() {
     setIsInitializingWorkflow(true);
@@ -114,7 +128,12 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
   }
 
   async function refreshDashboard() {
-    setDashboard(await api.getElevatorOperationalDashboard(elevatorId));
+    const dashboardResponse = await api.getElevatorOperationalDashboard(elevatorId);
+    const latestZoneAnalysisResponse = dashboardResponse.quick_links.latest_test_run_id
+      ? await api.getZoneLevelingAnalysis(dashboardResponse.quick_links.latest_test_run_id).catch(() => null)
+      : null;
+    setDashboard(dashboardResponse);
+    setLatestZoneAnalysis(latestZoneAnalysisResponse);
   }
 
   async function updateStep(step: CommissioningStep, status: CommissioningStepStatus) {
@@ -279,6 +298,34 @@ export function ElevatorDetailClient({ elevatorId }: { elevatorId: string }) {
                   </Link>
                 ) : (
                   <p className="border-t border-field-line p-3 text-sm text-field-muted">Crea una prueba para capturar parámetros.</p>
+                )}
+              </section>
+
+              <section className="border border-field-line bg-white shadow-panel">
+                <PanelHeader
+                  title="Parámetros de nivelación fina"
+                  subtitle={latestZoneAnalysis ? `${fineLevelingParameterStatus.okCount} ventanas OK · ${fineLevelingParameterStatus.warningCount} warnings` : "Sin análisis de última prueba"}
+                />
+                {latestZoneAnalysis ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-0 border-t border-field-line text-sm">
+                      <MetricCell label="OK" value={String(fineLevelingParameterStatus.okCount)} />
+                      <MetricCell label="Warnings" value={String(fineLevelingParameterStatus.warningCount)} />
+                      <MetricCell label="Sin datos" value={String(fineLevelingParameterStatus.missingCount)} />
+                    </div>
+                    {fineLevelingParameterStatus.warningMessage ? (
+                      <p className="border-t border-field-line p-3 text-xs text-field-warn">{fineLevelingParameterStatus.warningMessage}</p>
+                    ) : (
+                      <p className="border-t border-field-line p-3 text-xs text-field-muted">Ventanas listas para revisar contra la matriz técnica.</p>
+                    )}
+                    {dashboard.quick_links.latest_test_run_id ? (
+                      <Link className="block border-t border-field-line p-3 text-sm font-semibold text-field-info" href={`/test-runs/${dashboard.quick_links.latest_test_run_id}#parameter-matrix`}>
+                        Abrir matriz 026D-278
+                      </Link>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="border-t border-field-line p-3 text-sm text-field-muted">Crea o abre una prueba con parámetros y mediciones para revisar la matriz.</p>
                 )}
               </section>
 

@@ -310,14 +310,22 @@ Implementación actual:
 ### Slice C — Tabla especializada de parámetros por zona
 
 Implementar UI técnica parecida a la hoja real:
-- Zona baja/media/alta.
-- Up/down bias.
-- MIN/MAX.
-- HEX.
-- Decimal.
-- Ventana MAX-MIN.
-- Warning si `MAX <= MIN`.
-- Warning si ventana no está entre 4 y 6 unidades.
+- [x] Zona baja/media/alta.
+- [x] Up/down bias.
+- [x] MIN/MAX.
+- [x] HEX.
+- [x] Decimal.
+- [x] Ventana MAX-MIN.
+- [x] Warning si `MAX <= MIN`.
+- [x] Warning si ventana no está entre 4 y 6 unidades.
+- [x] Sugeridos desde el análisis por zonas.
+- [x] Enlace desde el dashboard operacional del elevador.
+
+Implementación actual:
+- La matriz técnica vive en el detalle de `TestRun` como vista read-only.
+- El editor de parámetros sigue siendo el lugar donde se capturan y guardan valores HEX.
+- La matriz usa el análisis por zonas como fuente de sugeridos y clasifica localmente la ventana visible para mantener feedback inmediato.
+- A61E, A62E, A65E, A66E y A67E permanecen como procesos técnicos, no como parámetros HEX.
 
 ### Slice D — Cálculo de movimiento de banderas
 
